@@ -1,5 +1,46 @@
 # BUILD_LOG
 
+## 2026-07-11 — Session 2: pull recovery, fetch restructure, interim 14-yr refresh
+
+**Goal.** Recover the 30-yr pull after a power cut; work around a degraded
+CDS queue; refresh the whole map from the years already downloaded.
+
+**Decisions.**
+- Power cut ~20:00 on 2026-07-10: all 81 downloaded months verified intact
+  (zip integrity test — outage hit between requests); pull resumed, nothing
+  refetched.
+- CDS queue degraded from ~3 min/request (test day) to ~36 min/request.
+  Probe verified a 1-variable x 1-year request passes the cost cap that
+  rejects 3-variable years, so remaining years (2006-2020) fetch as 3
+  per-variable yearly files each: ~47 queue waits instead of 182. Complete
+  monthly years kept; 2004 finishes monthly (2 missing months).
+- Interim refresh at Jamie's request from the 14 complete years on disk
+  (1991-2003 + 2005; 2004 auto-excluded as partial). New safeguards so the
+  interim run cannot poison tonight's final run: script 04 only ingests
+  complete years; script 05 re-runs WindNinja when the cached run's input
+  speed differs from the current climatology; webmap legend flags gappy
+  year sets as "interim - download in progress".
+
+**Provenance.** ERA5 as before; interim climatology = 981,696 samples,
+14 years, p99 gust 22.0 m/s (2005-only was 20.3 — 2005 was a mild year).
+
+**Residuals & caveats.**
+- Mass-conserving solver is direction-reversal symmetric: opposite sectors
+  (N/S, E/W, NE/SW, SE/NW) produce identical multiplier fields, so the 8
+  sectors yield only 4 distinct terrain responses — no lee-side asymmetry.
+  Inherent to the solver choice; would need NinjaFOAM to resolve.
+- Interim gust surface 13.4-30.7 m/s (mean 22.6); worst-case max 35.2;
+  still below the ~45 m/s design gust. Max/min ratio 2.29 (offshore minima).
+- Zone breaks (smoothed field) shifted up ~1.5 m/s vs 2005-only:
+  20.2/21.7/22.3/22.7/23.1/24.3 m/s. Zone geometry broadly similar; the
+  Mt Cargill chain now forms a continuous Zone 5 ridge.
+- 2004 rejoins the record automatically once its two missing months land.
+
+**Checkpoints.** None new; all prior decisions carried.
+
+**Next.** Runner (per-var-year mode) continues toward 2020; on completion
+the automatic full refresh reruns 04-10 with all 30 years. Review, commit.
+
 ## 2026-07-10 — Session 1 addendum 2: generalised cartographic zones
 
 **Goal.** Rework zone polygons into smooth, curved, council-wind-zone-map

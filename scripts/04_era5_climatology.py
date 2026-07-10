@@ -24,10 +24,31 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import config as C
 
 
+def complete_year_files():
+    """Only complete years enter the climatology: 12 monthly files OR 3
+    per-variable yearly files. Partial years (mid-download) would bias the
+    seasonal mix."""
+    files, skipped = [], []
+    for year in C.ERA5_YEARS:
+        monthly = [C.ERA5_DIR / f"era5_{year}_{m:02d}.nc" for m in range(1, 13)]
+        yearly = [C.ERA5_DIR / f"era5_{year}_{t}.nc"
+                  for t in ("fg10", "u10", "v10")]
+        for candidate in (monthly, yearly):
+            if all(f.exists() and f.stat().st_size > 0 for f in candidate):
+                files.extend(candidate)
+                break
+        else:
+            if any(f.exists() for f in monthly + yearly):
+                skipped.append(year)
+    if skipped:
+        print(f"skipping incomplete year(s): {skipped}")
+    return sorted(files)
+
+
 def load():
-    files = sorted(C.ERA5_DIR.glob("era5_*.nc"))
+    files = complete_year_files()
     if not files:
-        sys.exit("no ERA5 files — run 03_fetch_era5.py first")
+        sys.exit("no complete ERA5 years — run 03_fetch_era5.py first")
 
     # The CDS delivers "as_source" zips (gust lives in the forecast stream,
     # u/v in the analysis stream -> two netCDFs per month) even though we
@@ -100,7 +121,8 @@ def main():
     out = {
         "source": "ERA5 reanalysis-era5-single-levels, hourly",
         "gust_variable": gust_name,
-        "years": sorted({int(f.stem.split("_")[1]) for f in C.ERA5_DIR.glob("era5_*.nc")}),
+        "years": sorted({int(f.stem.split("_")[1])
+                         for f in complete_year_files()}),
         "bbox": C.BBOX,
         "n_samples": int(n),
         "percentile": q,

@@ -74,6 +74,16 @@ def ramp_uri(vmin, vmax):
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+def years_label(years):
+    if len(years) == 1:
+        return f"{years[0]} (single year, provisional)"
+    span = max(years) - min(years) + 1
+    if len(years) < span:  # gaps: mid-download interim product
+        return (f"{min(years)}-{max(years)} "
+                f"({len(years)} yrs, interim - download in progress)")
+    return f"{min(years)}-{max(years)}"
+
+
 def main():
     gust_uri, gust_bounds, vmin, vmax = raster_overlay(
         C.OUTPUTS / "gust" / "gust99_500m_wgs84.tif", "gust")
@@ -111,9 +121,7 @@ def main():
         "@SCHEME@": scheme,
         "@ZONE_COLORS@": json.dumps(ZONE_COLORS),
         "@UNCERTAINTY@": C.UNCERTAINTY_STATEMENT,
-        "@YEARS@": (f"{min(clim['years'])}-{max(clim['years'])}"
-                    if len(clim["years"]) > 1
-                    else f"{clim['years'][0]} (single year, provisional)"),
+        "@YEARS@": years_label(clim["years"]),
         "@CENTER@": json.dumps([(C.BBOX["south"] + C.BBOX["north"]) / 2,
                                 (C.BBOX["west"] + C.BBOX["east"]) / 2]),
     }.items():

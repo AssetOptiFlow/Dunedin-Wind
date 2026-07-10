@@ -61,16 +61,29 @@ def run_sector(name: str, direction: int, speed: float) -> Path:
     run_dir = C.WINDNINJA_DIR / name
     run_dir.mkdir(parents=True, exist_ok=True)
     cfg = run_dir / f"{name}.cfg"
+
+    # Skip only if an existing run used the SAME input speed — sector speeds
+    # change whenever the climatology is refreshed (e.g. interim vs 30-yr).
+    # Read the OLD cfg before overwriting it.
+    existing = list(run_dir.glob("*_vel.asc"))
+    if existing and cfg.exists():
+        prior = next((line.split("=")[1].strip()
+                      for line in cfg.read_text().splitlines()
+                      if line.startswith("input_speed ")), None)
+        if prior is not None and abs(float(prior) - speed) < 0.05:
+            print(f"  {name}: output exists for same speed, skipping run")
+            return existing[0]
+        print(f"  {name}: cached run used speed {prior}, "
+              f"need {speed:.2f} — rerunning")
+        for f in existing:
+            f.unlink()
+        existing = []
+
     cfg.write_text(CFG_TEMPLATE.format(
         threads=C.WN_NUM_THREADS, dem=C.DEM_DIR / "dem_utm.tif",
         speed=speed, direction=direction, height=C.WN_WIND_HEIGHT_M,
         vegetation=C.WN_VEGETATION, mesh=C.WN_MESH_RES_M,
         out_res=C.GRID_RES_M, out_path=run_dir))
-
-    existing = list(run_dir.glob("*_vel.asc"))
-    if existing:
-        print(f"  {name}: output exists, skipping run")
-        return existing[0]
 
     print(f"  {name}: dir {direction} deg @ {speed:.1f} m/s ...", flush=True)
     proc = subprocess.run([str(C.WINDNINJA_CLI), str(cfg)],
