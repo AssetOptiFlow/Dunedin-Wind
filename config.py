@@ -76,10 +76,14 @@ STATIONS = [
 # --- Zones & arrows ------------------------------------------------------------
 N_ZONES = 5                 # Zone 1 = lowest exposure ... Zone 5 = highest
 ARROW_SPACING_M = 2500      # Checkpoint 6 value (~5x5 analysis cells)
-# Zone cluster cleanup: majority-smooth passes, then sieve patches smaller
-# than this many 500 m cells (8 cells = 2 km^2) into the surrounding zone.
-ZONE_SMOOTH_PASSES = 1
-ZONE_MIN_PATCH_CELLS = 8
+# Zone polygons are a cartographically generalised layer (Wellington-wind-
+# zones look): Gaussian-smoothed field, contour-style nested thresholds,
+# curved boundaries. The continuous gust raster stays quantitative.
+ZONE_GAUSS_SIGMA_M = 1000    # smoothing of the field before classification
+ZONE_UPSAMPLE = 5            # 500 m -> 100 m before contouring (curve quality)
+ZONE_MIN_AREA_KM2 = 2.0      # drop zone islands / fill holes smaller than this
+ZONE_BOUNDARY_SMOOTH_M = 250 # round-join buffer smoothing radius
+LAND_MIN_ELEV_M = 1.0        # zones are clipped to land (council-map style)
 
 # Internal rasters/science stay in m/s; user-facing display is km/h.
 MS_TO_KMH = 3.6

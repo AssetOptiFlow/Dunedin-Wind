@@ -196,7 +196,7 @@ const stations = L.geoJSON(@STATIONS@, {
     .bindPopup(`<b>${f.properties.name}</b><br>${f.properties.role}`)
 });
 
-gust.addTo(map); arrows.addTo(map); stations.addTo(map);
+zones.addTo(map); arrows.addTo(map); stations.addTo(map);
 L.control.layers(null, {
   'Gust speed (continuous)': gust,
   'Exposure zones (1–5)': zones,

@@ -1,5 +1,41 @@
 # BUILD_LOG
 
+## 2026-07-10 — Session 1 addendum 2: generalised cartographic zones
+
+**Goal.** Rework zone polygons into smooth, curved, council-wind-zone-map
+style shapes (Jamie's reference: WCC wind zones via wellingtonista.com),
+replacing the rectangular cell-edge polygons.
+
+**Decisions.**
+- Jamie explicitly wants the SHAPE/DESIGN of NZS 3604-style council maps
+  only — NOT the NZS 3604 design-gust methodology (offered, declined for
+  now; would need the 30-yr record for an extreme-value fit, still on hold).
+- New zone derivation: 1 km Gaussian smooth of the gust field -> 5x upsample
+  (100 m) -> nested cumulative thresholds at the class breaks (contour
+  style, gap/overlap-free) -> drop islands/holes < 2 km^2 -> round-join
+  buffer smoothing (250 m) -> difference into bands. Tunables in config.py.
+- Breaks recomputed on the SMOOTHED field (raw-field breaks emptied Zone 5
+  because smoothing compresses the tails). Raw + smoothed break sets both in
+  outputs/diagnostics/zone_breaks_smoothed.json.
+- Zones clipped to land, council-map style (water unzoned; continuous raster
+  still covers it). Ocean mask = low cells connected to the map edge (flood
+  fill) — a plain elevation cut wrongly dropped the below-sea-level drained
+  Taieri Plain; caught on the screenshot, fixed same session.
+- Webmap default layers now zones+arrows+stations (gust raster opt-in).
+
+**Residuals & caveats.**
+- The zone layer is now explicitly GENERALISED CARTOGRAPHY: 1 km smoothing
+  compresses zone value ranges to 1-2 km/h widths (69-73 ... 78-82 km/h) —
+  zones are ordinal exposure classes, not precise bins. Stated in each
+  feature's note property. Quantitative values live in the continuous layer.
+- Zone areas: 90 / 298 / 601 / 586 / 159 km^2 (Zones 1-5).
+
+**Checkpoints.** None new; Checkpoint 5's Jenks choice carried over (applied
+to the smoothed field). NZS 3604 design-gust variant parked with the 30-yr
+pull decision.
+
+**Next.** Unchanged: 30-yr pull on Jamie's go, then re-run 04->10.
+
 ## 2026-07-10 — Session 1 addendum: repo push, km/h display, zone clustering
 
 **Goal.** Publish to GitHub; convert user-facing units to km/h; normalise
