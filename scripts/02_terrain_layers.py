@@ -36,11 +36,21 @@ HORIZON_SEARCH_M = 2000.0
 
 
 def richdem_metrics():
+    # richdem's LoadGDAL/SaveGDAL need the osgeo bindings, which this env
+    # doesn't ship — go through rasterio + rd.rdarray instead.
     import richdem as rd
-    dem = rd.LoadGDAL(str(DEM_UTM))
+    with rasterio.open(DEM_UTM) as src:
+        arr = src.read(1).astype("float64")
+        prof = src.profile.copy()
+        gt = src.transform.to_gdal()
+        nodata = src.nodata if src.nodata is not None else -9999.0
+    dem = rd.rdarray(arr, no_data=nodata)
+    dem.geotransform = gt
+    prof.update(dtype="float32", nodata=-9999.0)
     for attrib, name in [("slope_degrees", "slope"), ("aspect", "aspect")]:
         out = rd.TerrainAttribute(dem, attrib=attrib)
-        rd.SaveGDAL(str(C.DEM_DIR / f"{name}_30m.tif"), out)
+        with rasterio.open(C.DEM_DIR / f"{name}_30m.tif", "w", **prof) as dst:
+            dst.write(np.asarray(out, dtype="float32"), 1)
         print(f"  richdem {name} done")
 
 
