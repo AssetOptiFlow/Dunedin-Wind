@@ -1,0 +1,17 @@
+name: windzone
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - rasterio
+  - richdem
+  - whitebox
+  - geopandas
+  - xarray
+  - netcdf4
+  - cdsapi
+  - scipy
+  - pandas
+  - jenkspy
+  - pillow
+  - matplotlib

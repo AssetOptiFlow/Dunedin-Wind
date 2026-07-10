@@ -1,0 +1,6 @@
+data/
+*.nc
+outputs/**/*.tif
+__pycache__/
+*.pyc
+.vscode/
