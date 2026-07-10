@@ -28,8 +28,37 @@ def load():
     files = sorted(C.ERA5_DIR.glob("era5_*.nc"))
     if not files:
         sys.exit("no ERA5 files — run 03_fetch_era5.py first")
-    print(f"loading {len(files)} year files...")
-    ds = xr.open_mfdataset(files, combine="by_coords")
+
+    # The CDS delivers "as_source" zips (gust lives in the forecast stream,
+    # u/v in the analysis stream -> two netCDFs per month) even though we
+    # asked for unzipped. Unpack transparently, cache in era5/unpacked/.
+    import zipfile
+    unpack = C.ERA5_DIR / "unpacked"
+    unpack.mkdir(exist_ok=True)
+    paths = []
+    for f in files:
+        with open(f, "rb") as fh:
+            is_zip = fh.read(2) == b"PK"
+        if not is_zip:
+            paths.append(f)
+            continue
+        with zipfile.ZipFile(f) as z:
+            for m in z.namelist():
+                if not m.endswith(".nc"):
+                    continue
+                dest = unpack / f"{f.stem}_{Path(m).name}"
+                if not dest.exists():
+                    dest.write_bytes(z.read(m))
+                paths.append(dest)
+
+    print(f"loading {len(files)} month files ({len(paths)} netCDF members)...")
+    # Eager per-file load: the whole 30-year domain is ~100 MB, no dask needed.
+    parts = []
+    for p in paths:
+        with xr.open_dataset(p) as d:
+            d = d.drop_vars([v for v in ("expver", "number") if v in d.variables])
+            parts.append(d.load())
+    ds = xr.combine_by_coords(parts, combine_attrs="drop_conflicts")
     # New CDS netCDF names the time dim 'valid_time'; normalise.
     if "valid_time" in ds.dims:
         ds = ds.rename({"valid_time": "time"})

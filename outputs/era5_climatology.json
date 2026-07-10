@@ -1,0 +1,83 @@
+{
+  "source": "ERA5 reanalysis-era5-single-levels, hourly",
+  "gust_variable": "fg10",
+  "years": [
+    2005
+  ],
+  "bbox": {
+    "south": -46.1,
+    "west": 170.0,
+    "north": -45.7,
+    "east": 170.8
+  },
+  "n_samples": 70080,
+  "percentile": 99,
+  "gust_p99_overall_ms": 20.255586624145508,
+  "speed_p99_overall_ms": 12.488927841186523,
+  "sectors": [
+    {
+      "sector": "N",
+      "center_deg": 0,
+      "freq": 0.16285673515981736,
+      "freq_top_decile_gust": 0.019691780821917807,
+      "gust_p99_ms": 14.53831672668457,
+      "speed_p99_ms": 9.007883071899414
+    },
+    {
+      "sector": "NE",
+      "center_deg": 45,
+      "freq": 0.22251712328767123,
+      "freq_top_decile_gust": 0.1396974885844749,
+      "gust_p99_ms": 16.803739547729492,
+      "speed_p99_ms": 11.414319038391113
+    },
+    {
+      "sector": "E",
+      "center_deg": 90,
+      "freq": 0.060973173515981735,
+      "freq_top_decile_gust": 0.0007134703196347032,
+      "gust_p99_ms": 13.3446683883667,
+      "speed_p99_ms": 8.843602180480957
+    },
+    {
+      "sector": "SE",
+      "center_deg": 135,
+      "freq": 0.032148972602739724,
+      "freq_top_decile_gust": 0.00028538812785388126,
+      "gust_p99_ms": 13.39559555053711,
+      "speed_p99_ms": 8.483990669250488
+    },
+    {
+      "sector": "S",
+      "center_deg": 180,
+      "freq": 0.04922945205479452,
+      "freq_top_decile_gust": 0.009703196347031963,
+      "gust_p99_ms": 15.851518630981445,
+      "speed_p99_ms": 10.674983978271484
+    },
+    {
+      "sector": "SW",
+      "center_deg": 225,
+      "freq": 0.15476598173515982,
+      "freq_top_decile_gust": 0.3658675799086758,
+      "gust_p99_ms": 22.001611709594727,
+      "speed_p99_ms": 14.238997459411621
+    },
+    {
+      "sector": "W",
+      "center_deg": 270,
+      "freq": 0.19767408675799086,
+      "freq_top_decile_gust": 0.4500570776255708,
+      "gust_p99_ms": 23.047901153564453,
+      "speed_p99_ms": 13.064510345458984
+    },
+    {
+      "sector": "NW",
+      "center_deg": 315,
+      "freq": 0.11983447488584476,
+      "freq_top_decile_gust": 0.013984018264840182,
+      "gust_p99_ms": 14.657817840576172,
+      "speed_p99_ms": 7.5293402671813965
+    }
+  ]
+}
