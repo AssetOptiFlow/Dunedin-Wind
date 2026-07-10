@@ -12,10 +12,12 @@ The ERA5 licence must be accepted once at
 https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels
 (otherwise the first request returns 403).
 
-Per-MONTH requests with resume-on-existing-file, so the 30-year loop is
-restartable. (Per-year requests fail on the new CDS with "cost limits
-exceeded" for hourly netcdf — observed 2026-07-10 — so we chunk monthly,
-~2.2k fields per request.)
+Request chunking (all resumable via skip-if-exists):
+- 3-variable year requests fail the CDS cost cap ("cost limits exceeded",
+  observed 2026-07-10). Monthly 3-var chunks work but cost ~360 queue waits.
+- 1-variable YEAR requests pass the cap (verified 2026-07-11), so incomplete
+  years are fetched as 3 per-variable yearly files (era5_YYYY_<var>.nc) —
+  4x fewer queue waits. Years already complete as monthly files are kept.
 """
 import argparse
 import sys
@@ -71,10 +73,62 @@ def fetch_month(client, year: int, month: int, dest: Path) -> float:
     return dt
 
 
+VAR_TAGS = {"10m_wind_gust_since_previous_post_processing": "fg10",
+            "10m_u_component_of_wind": "u10",
+            "10m_v_component_of_wind": "v10"}
+
+
+def fetch_year_var(client, year: int, variable: str, dest: Path) -> float:
+    if dest.exists() and dest.stat().st_size > 0:
+        print(f"  {year} {VAR_TAGS[variable]}: exists, skipping", flush=True)
+        return 0.0
+    t0 = time.time()
+    client.retrieve(
+        C.ERA5_DATASET,
+        {
+            "product_type": ["reanalysis"],
+            "variable": [variable],
+            "year": [str(year)],
+            "month": [f"{m:02d}" for m in range(1, 13)],
+            "day": [f"{d:02d}" for d in range(1, 32)],
+            "time": [f"{h:02d}:00" for h in range(24)],
+            "area": [C.BBOX["north"], C.BBOX["west"],
+                     C.BBOX["south"], C.BBOX["east"]],
+            "grid": [0.25, 0.25],
+            "data_format": "netcdf",
+            "download_format": "unzipped",
+        },
+        str(dest),
+    )
+    dt = time.time() - t0
+    print(f"  {year} {VAR_TAGS[variable]}: {dest.stat().st_size/1e6:.2f} MB "
+          f"in {dt/60:.1f} min", flush=True)
+    return dt
+
+
 def fetch_year(client, year: int) -> float:
-    return sum(
-        fetch_month(client, year, m, C.ERA5_DIR / f"era5_{year}_{m:02d}.nc")
-        for m in range(1, 13))
+    monthly = [C.ERA5_DIR / f"era5_{year}_{m:02d}.nc" for m in range(1, 13)]
+    yearly = [C.ERA5_DIR / f"era5_{year}_{VAR_TAGS[v]}.nc"
+              for v in C.ERA5_VARIABLES]
+    if all(f.exists() and f.stat().st_size > 0 for f in monthly):
+        print(f"  {year}: complete (monthly), skipping", flush=True)
+        return 0.0
+    if all(f.exists() and f.stat().st_size > 0 for f in yearly):
+        print(f"  {year}: complete (per-var yearly), skipping", flush=True)
+        return 0.0
+    # Mostly-complete monthly years: cheaper to finish the missing months
+    # than to refetch the year per-variable.
+    have = [f.exists() and f.stat().st_size > 0 for f in monthly]
+    if sum(have) >= 10:
+        return sum(fetch_month(client, year, m + 1, monthly[m])
+                   for m in range(12) if not have[m])
+    # Partial monthly files would duplicate times against the yearly files
+    # in 04's combine — remove them before switching format for this year.
+    for f in monthly:
+        if f.exists():
+            f.unlink()
+    return sum(fetch_year_var(client, year, v, d)
+               for v, d in zip(C.ERA5_VARIABLES, yearly))
 
 
 def main():
