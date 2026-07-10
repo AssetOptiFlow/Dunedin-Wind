@@ -54,6 +54,22 @@ def diagnose(values, brk):
     print(f"diagnostics -> {C.DIAGNOSTICS / 'zone_breaks.png'}")
 
 
+def majority_smooth(z, passes):
+    """Nodata-aware 3x3 strict-majority filter: a cell flips only when >=5 of
+    its 9 neighbours (incl. itself) agree on another zone. 0 = nodata."""
+    for _ in range(passes):
+        p = np.pad(z, 1, mode="edge")
+        stack = np.stack([p[1+dr:p.shape[0]-1+dr, 1+dc:p.shape[1]-1+dc]
+                          for dr in (-1, 0, 1) for dc in (-1, 0, 1)])
+        counts = np.stack([(stack == k).sum(axis=0)
+                           for k in range(1, C.N_ZONES + 1)])
+        mode = counts.argmax(axis=0).astype("uint8") + 1
+        strict = counts.max(axis=0) >= 5
+        valid = z > 0
+        z = np.where(valid & strict, mode, z)
+    return z
+
+
 def classify(scheme, values, brk):
     bs = np.array(brk[scheme])
     bs[0], bs[-1] = -np.inf, np.inf
@@ -63,6 +79,17 @@ def classify(scheme, values, brk):
         transform = src.transform
     zones = np.digitize(gust, bs[1:-1]) + 1  # 1..5
     zones = np.where(np.isfinite(gust), zones, 0).astype("uint8")
+
+    # Normalise speckle into connected clusters: majority smooth, then absorb
+    # patches under ZONE_MIN_PATCH_CELLS into their surrounding zone.
+    raw_cells = [(zones == z).sum() for z in range(1, C.N_ZONES + 1)]
+    zones = majority_smooth(zones, C.ZONE_SMOOTH_PASSES)
+    zones = features.sieve(zones, size=C.ZONE_MIN_PATCH_CELLS,
+                           connectivity=8, mask=zones > 0)
+    clean_cells = [(zones == z).sum() for z in range(1, C.N_ZONES + 1)]
+    print(f"  cluster cleanup (majority x{C.ZONE_SMOOTH_PASSES} + sieve "
+          f"<{C.ZONE_MIN_PATCH_CELLS} cells): "
+          f"cells/zone {raw_cells} -> {clean_cells}")
 
     prof.update(dtype="uint8", nodata=0)
     zr_path = C.OUTPUTS / "zones_500m_wgs84.tif"
@@ -80,6 +107,9 @@ def classify(scheme, values, brk):
     gdf["label"] = gdf["zone"].map(lambda z: f"Zone {z}")
     gdf["gust_range_ms"] = gdf["zone"].map(
         lambda z: f"{real_breaks[z-1]:.1f}-{real_breaks[z]:.1f}")
+    gdf["gust_range_kmh"] = gdf["zone"].map(
+        lambda z: f"{real_breaks[z-1]*C.MS_TO_KMH:.0f}-"
+                  f"{real_breaks[z]*C.MS_TO_KMH:.0f}")
     gdf["scheme"] = scheme
     gdf["note"] = C.UNCERTAINTY_STATEMENT
     out = C.OUTPUTS / "zones.geojson"

@@ -1,5 +1,33 @@
 # BUILD_LOG
 
+## 2026-07-10 — Session 1 addendum: repo push, km/h display, zone clustering
+
+**Goal.** Publish to GitHub; convert user-facing units to km/h; normalise
+zone speckle into connected clusters (both requested by Jamie).
+
+**Decisions.**
+- Pushed to https://github.com/AssetOptiFlow/Dunedin-Wind (branch `main`).
+- Units: rasters and GeoJSON keep m/s (SI, matches AS/NZS and the science);
+  all display (legend, zone labels/popups, arrow popups) is km/h; vectors
+  carry both attributes (`gust_range_ms`/`gust_range_kmh`, `speed_ms`/`speed_kmh`).
+- Zone clustering: 3x3 strict-majority smooth (1 pass, nodata-aware) then
+  rasterio sieve of patches < 8 cells (2 km^2, `ZONE_MIN_PATCH_CELLS` in
+  config) into the surrounding zone, before polygonising.
+
+**Residuals & caveats.**
+- Cleanup trades extreme-cell fidelity for legibility: Zone 5 shrank
+  283 -> 159 cells, Zone 1 348 -> 238 (isolated extremes absorbed into
+  neighbours). The continuous gust raster retains full 500 m detail, so no
+  information is lost from the product — only from the zone abstraction.
+- Zone 4 still has 75 patches (12-75 across zones); it is a genuinely
+  scattered "ridge flank" class. Sieving harder starts deleting real
+  structure; threshold left tunable.
+
+**Checkpoints.** None (display/presentation changes only; classification
+scheme and breaks unchanged from Checkpoint 5).
+
+**Next.** Unchanged: Jamie reviews webmap; 30-yr pull on his go.
+
 ## 2026-07-10 — Session 1: full pipeline stood up, 2005 shakedown webmap
 
 **Goal.** Stand up the toolchain on a clean Windows 11 machine and run the

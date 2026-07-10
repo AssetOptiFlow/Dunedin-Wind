@@ -83,14 +83,14 @@ def main():
     arrows = (C.OUTPUTS / "arrows.geojson").read_text()
     stations = (C.WEBMAP / "stations.geojson").read_text()
     zone_meta = json.loads(zones)
-    zone_ranges = {f["properties"]["zone"]: f["properties"]["gust_range_ms"]
+    zone_ranges = {f["properties"]["zone"]: f["properties"]["gust_range_kmh"]
                    for f in zone_meta["features"]}
     scheme = zone_meta["features"][0]["properties"]["scheme"]
     clim = json.loads((C.OUTPUTS / "era5_climatology.json").read_text())
 
     zone_rows = "".join(
         f'<div class="row"><span class="swatch" style="background:{ZONE_COLORS[z-1]}">'
-        f'</span>Zone {z} &nbsp;{zone_ranges[z]} m/s</div>'
+        f'</span>Zone {z} &nbsp;{zone_ranges[z]} km/h</div>'
         for z in sorted(zone_ranges))
 
     html = HTML_TEMPLATE
@@ -105,8 +105,8 @@ def main():
         "@ARROWS@": arrows,
         "@STATIONS@": stations,
         "@RAMP_URI@": ramp_uri(vmin, vmax),
-        "@VMIN@": f"{vmin:.0f}",
-        "@VMAX@": f"{vmax:.0f}",
+        "@VMIN@": f"{vmin * C.MS_TO_KMH:.0f}",
+        "@VMAX@": f"{vmax * C.MS_TO_KMH:.0f}",
         "@ZONE_ROWS@": zone_rows,
         "@SCHEME@": scheme,
         "@ZONE_COLORS@": json.dumps(ZONE_COLORS),
@@ -164,8 +164,8 @@ const zones = L.geoJSON(@ZONES@, {
   style: f => ({color: '#333', weight: 1.2,
                 fillColor: zoneColors[f.properties.zone - 1], fillOpacity: .45}),
   onEachFeature: (f, l) => l.bindPopup(
-    `<b>${f.properties.label}</b><br>p99 gust ${f.properties.gust_range_ms} m/s` +
-    `<br><i>${f.properties.note}</i>`)
+    `<b>${f.properties.label}</b><br>p99 gust ${f.properties.gust_range_kmh} km/h` +
+    ` (${f.properties.gust_range_ms} m/s)<br><i>${f.properties.note}</i>`)
 });
 
 function arrowIcon(bearing, speed, vmin, vmax) {
@@ -187,7 +187,7 @@ const arrows = L.geoJSON(arrowData, {
   pointToLayer: (f, ll) => L.marker(ll,
     {icon: arrowIcon(f.properties.bearing_deg, f.properties.speed_ms, sMin, sMax)})
     .bindPopup(`wind from <b>${f.properties.sector}</b>` +
-               `<br>p99 gust ~${f.properties.speed_ms} m/s`)
+               `<br>p99 gust ~${f.properties.speed_kmh} km/h`)
 });
 
 const stations = L.geoJSON(@STATIONS@, {
@@ -209,7 +209,7 @@ const legend = L.control({position: 'bottomright'});
 legend.onAdd = () => {
   const d = L.DomUtil.create('div', 'legend');
   d.innerHTML = `
-    <h4>p99 gust estimate (m/s), ERA5 @YEARS@</h4>
+    <h4>p99 gust estimate (km/h), ERA5 @YEARS@</h4>
     <img src="@RAMP_URI@" style="width:100%;height:12px"><div class="row"
       style="justify-content:space-between"><span>@VMIN@</span>
       <span style="color:#666">1&ndash;99.5 pctile stretch</span><span>@VMAX@</span></div>

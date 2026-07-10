@@ -76,6 +76,13 @@ STATIONS = [
 # --- Zones & arrows ------------------------------------------------------------
 N_ZONES = 5                 # Zone 1 = lowest exposure ... Zone 5 = highest
 ARROW_SPACING_M = 2500      # Checkpoint 6 value (~5x5 analysis cells)
+# Zone cluster cleanup: majority-smooth passes, then sieve patches smaller
+# than this many 500 m cells (8 cells = 2 km^2) into the surrounding zone.
+ZONE_SMOOTH_PASSES = 1
+ZONE_MIN_PATCH_CELLS = 8
+
+# Internal rasters/science stay in m/s; user-facing display is km/h.
+MS_TO_KMH = 3.6
 
 UNCERTAINTY_STATEMENT = (
     "Modelled screening estimate (ERA5 + WindNinja terrain adjustment). "

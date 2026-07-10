@@ -60,6 +60,7 @@ def main():
                     "bearing_deg": C.SECTORS[s_idx],
                     "sector": C.SECTOR_NAMES[s_idx],
                     "speed_ms": round(float(gust[r, c]), 1),
+                    "speed_kmh": round(float(gust[r, c]) * C.MS_TO_KMH),
                 },
             })
 
