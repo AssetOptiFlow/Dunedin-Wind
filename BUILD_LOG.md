@@ -1,57 +1,85 @@
 # BUILD_LOG
 
-## 2026-07-10 — Session 1: environment + repo scaffold
+## 2026-07-10 — Session 1: full pipeline stood up, 2005 shakedown webmap
 
-**Goal.** Stand up the full toolchain on a clean Windows 11 machine and
-scaffold the repo for the Dunedin wind gust screening trial.
+**Goal.** Stand up the toolchain on a clean Windows 11 machine and run the
+entire pipeline end-to-end for the Dunedin trial. Outcome: complete, with the
+climatology provisionally based on the 2005 test year (see Checkpoint 2).
 
 **Decisions.**
-- The environment described in the brief (conda `windzone` env, WindNinja on
-  PATH, `~/.cdsapirc`) did not exist on this machine. Jamie confirmed: install
-  the full stack fresh; he will supply the CDS token when the pipeline asks.
-- `BUILD_LOG_convention.md` did not exist anywhere; Jamie confirmed drafting it
-  fresh (this file follows it).
-- CliFlo: no account will be used — public station metadata only. Confirmed by
-  Jamie; sufficient because the confidence layer needs station *locations*, not
-  gust records.
-- DEM: Copernicus GLO-30 via anonymous AWS S3 instead of SRTM. Reason: the
-  `elevation` package requires GNU make/curl (unreliable on Windows) and
-  OpenTopography now requires an API key. GLO-30 is a DSM (canopy/buildings
-  included) vs SRTM quasi-DTM — arguably preferable for wind exposure.
-  **Pending Jamie's sign-off at Checkpoint 1**; fallback is SRTMGL1 via a free
-  OpenTopography key.
-- WindNinja initialization: `domainAverageInitialization`, non-diurnal,
-  mass-conserving solver (`momentum_flag=false`) — verified against the shipped
-  `cli_domainAverage.cfg`, `cli.cpp`, and the installed CLI's own `--help`.
-  Awaiting Jamie's confirmation at Checkpoint 3 before runs.
-- The 3.12.2 win64 build exposes **no GeoTIFF output option** (`--help` and
-  `--runtime_options` captured in `outputs/diagnostics/`). Using ASCII AAIGRID
-  output (`_vel.asc`/`_ang.asc`) at 500 m instead; rasterio reads these
-  natively. This was the planned fallback.
-- Python 3.12 (not 3.13) in the env for binary-wheel maturity; richdem 2.4.3
-  has conda-forge win-64 builds and imports cleanly.
+- Environment in the brief (conda `windzone`, WindNinja on PATH, `~/.cdsapirc`)
+  did not exist; Jamie confirmed a fresh install of the full stack.
+- `BUILD_LOG_convention.md` drafted fresh (Jamie confirmed); CliFlo public
+  station metadata only, no account (Jamie confirmed).
+- DEM: Copernicus GLO-30 (anonymous AWS) instead of SRTM — `elevation` pkg
+  needs GNU make/curl, OpenTopography needs an API key. GLO-30 is a DSM
+  (canopy/buildings), arguably right for wind exposure. **Checkpoint 1:
+  accepted by Jamie.**
+- ERA5: new CDS rejects year-sized hourly netcdf requests ("cost limits
+  exceeded"), so fetch is chunked per month with skip-if-exists resume.
+  Deliveries are "as_source" zips (gust in forecast stream, u/v in analysis
+  stream — two netCDF members each); climatology unpacks transparently.
+  Measured test year (2005): 12 requests, 38.5 min, 2.4 MB. Extrapolated
+  30-yr pull: ~360 requests, ~19-20 h queue time, ~72 MB, $0.
+  **Checkpoint 2: Jamie chose HOLD — build everything on 2005 first, review
+  the webmap, then decide the 30-yr pull.** All 2005-derived numbers below
+  are therefore provisional.
+- WindNinja: `domainAverageInitialization`, non-diurnal, mass-conserving
+  solver, 200 m mesh -> 500 m ASCII output (this win64 build has no GeoTIFF
+  writer — `--help`/`--runtime_options` captured in outputs/diagnostics/).
+  8 sectors at per-sector p99 10 m speed (N 9.0, NE 11.4, E 8.8, SE 8.5,
+  S 10.7, SW 14.2, W 13.1, NW 7.5 m/s). **Checkpoint 3: confirmed by Jamie.**
+- Confidence: 3 stations (Dunedin Aerodrome AWS, Musselburgh EWS, Taiaroa
+  Head), distance bands 7.5/15 km, TRI terciles computed over LAND cells only
+  (ocean TRI=0 degenerated the lower break to 0.0 — fixed same session),
+  weakest-link min(). **Checkpoint 4: confirmed by Jamie.**
+- Zones: gust distribution strongly peaked at ~21.4 m/s; quantile breaks
+  collapse zones 2-4 into 0.7 m/s. **Checkpoint 5: Jenks chosen by Jamie.**
+  Breaks: 13.2 / 19.2 / 20.8 / 21.9 / 23.2 / 26.8 m/s.
+- Arrows: **Checkpoint 6: 2.5 km spacing confirmed** (450 points). Dominant
+  sector per cell = argmax of (top-decile-gust sector weight x local
+  multiplier x sector p99 gust); arrows drawn pointing downwind.
+- Webmap: single self-contained index.html (0.7 MB) — Leaflet inlined,
+  rasters as base64 PNG overlays, vectors inline; only network dependency is
+  OSM basemap tiles. Verified in headless Edge (DOM probes + screenshot).
 
 **Provenance.**
-- Miniconda: https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
-  (130,747,768 bytes, retrieved 2026-07-10), installed to `%USERPROFILE%\miniconda3`,
-  user-level, not on PATH.
-- WindNinja 3.12.2 win64: https://research.fs.usda.gov/sites/default/files/2026-03/firelab-windninja-3.12.2-win64.zip
-  (99,636,043 bytes, retrieved 2026-07-10), installed to
-  `C:\WindNinja\WindNinja-3.12.2` (NSIS silent). `WindNinja_cli.exe --help`
-  runs; full option dump in `outputs/diagnostics/windninja_cli_help.txt`.
-- conda env `windzone`: conda-forge, python=3.12, rasterio 1.5.0, richdem,
-  whitebox, geopandas, xarray, netcdf4, cdsapi, scipy, pandas, jenkspy, pillow,
-  matplotlib. All imports verified. Exact spec in `environment.yml`.
+- Miniconda (repo.anaconda.com, 130,747,768 B, 2026-07-10) -> %USERPROFILE%\miniconda3.
+- WindNinja 3.12.2 win64 (research.fs.usda.gov, 99,636,043 B, 2026-07-10)
+  -> C:\WindNinja\WindNinja-3.12.2.
+- conda env `windzone`: conda-forge, python 3.12, rasterio 1.5.0, richdem
+  2.4.3, whitebox, geopandas, xarray, netcdf4, cdsapi, scipy, pandas, jenkspy,
+  pillow, matplotlib (spec: environment.yml).
+- Copernicus GLO-30 DSM: 4 tiles (S46/S47 x E169/E170), anonymous S3
+  copernicus-dem-30m, 2026-07-10. ESA licence. Merged/clipped/warped to
+  EPSG:32759 @ 30 m, bbox + 5 km buffer; elev -33..895 m (small coastal
+  negatives are GLO-30 ocean noise).
+- ERA5 hourly 2005 (fg10, u10, v10), CDS reanalysis-era5-single-levels,
+  retrieved 2026-07-10, Copernicus licence. 70,080 samples; p99 gust
+  20.3 m/s; SW+W = 81.6% of top-decile gust hours.
+- Station coordinates: public NIWA/CliFlo metadata, approximate to ~100 m,
+  recorded in webmap/stations.geojson. Locations only — no gust records used.
 
 **Residuals & caveats.**
-- WindNinja binaries are installed but no simulation has been run yet — the
-  real smoke test is the first sector run in Phase 3.
-- `environment.yml` pins only python; a `conda env export` lockfile should be
-  captured once the pipeline has run end-to-end.
+- Climatology is ONE YEAR (2005). Sector speeds, p99 gust, zone breaks and
+  arrows will all shift with the 30-year record; the pipeline re-runs
+  scripts 04-10 unchanged when it lands.
+- Gust surface 13.0-28.7 m/s (mean 21.2), worst-case max 33.6 — below the
+  ~45 m/s southern-NZ design gust (sanity OK). Max/min spatial ratio 2.22
+  vs ~1.8 credible AS/NZS terrain-multiplier spread: slightly wide, driven
+  by flat offshore minima; kept, documented (outputs/diagnostics/asnzs_sanity.md).
+- ERA5 resolves the domain with ~12 grid points; all fine structure is
+  modelled terrain response, not observation.
+- Mass-conserving solver in complex terrain (peninsula lee): captured only
+  via the TRI confidence term. NinjaFOAM sensitivity run = future work.
+- 41% of cells are >15 km from any station (max 32 km, western inland) —
+  flagged low confidence / no_station_within_threshold. Honest, not a bug.
+- environment.yml pins python only; export a lockfile before scaling to Otago.
 
-**Checkpoints.** None hit yet. Pending: 1 (terrain + DEM substitution),
-2 (30-yr ERA5 cost), 3 (WindNinja run matrix), 4 (stations + distance
-threshold), 5 (Jenks vs quantiles), 6 (arrow spacing).
+**Checkpoints.** 1 accepted (GLO-30); 2 HOLD (2005-only shakedown; 30-yr pull
+deferred pending webmap review — ~20 h unattended when approved); 3 confirmed;
+4 confirmed (3 stations, 7.5/15 km); 5 Jenks; 6 2.5 km.
 
-**Next.** Phase 1: fetch GLO-30 tiles, build terrain layers, produce
-quicklooks for Checkpoint 1.
+**Next.** Jamie reviews webmap/index.html. If approved: run the 30-yr pull
+(`03_fetch_era5.py --all`, resumable), then re-run 04→10. Then consider
+GitHub remote + Pages deploy, and the Otago-scale plan.

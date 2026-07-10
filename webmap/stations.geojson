@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          170.198,
+          -45.928
+        ]
+      },
+      "properties": {
+        "name": "Dunedin Aerodrome AWS",
+        "source": "Public NIWA/CliFlo station metadata (locations only; no gust records used). Coordinates approximate to ~100 m.",
+        "role": "confidence distance anchor - NOT a validation point"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          170.512,
+          -45.901
+        ]
+      },
+      "properties": {
+        "name": "Dunedin, Musselburgh EWS",
+        "source": "Public NIWA/CliFlo station metadata (locations only; no gust records used). Coordinates approximate to ~100 m.",
+        "role": "confidence distance anchor - NOT a validation point"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          170.728,
+          -45.774
+        ]
+      },
+      "properties": {
+        "name": "Taiaroa Head",
+        "source": "Public NIWA/CliFlo station metadata (locations only; no gust records used). Coordinates approximate to ~100 m.",
+        "role": "confidence distance anchor - NOT a validation point"
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "thresholds_km": {
+    "high": 7.5,
+    "medium": 15.0
+  },
+  "tri_terciles": [
+    4.012431967735289,
+    7.1485827970504765
+  ],
+  "cells": {
+    "high": 1423,
+    "medium": 4019,
+    "low": 6024
+  },
+  "no_station_cells": 4766,
+  "max_station_distance_km": 31.95451982605648
+}

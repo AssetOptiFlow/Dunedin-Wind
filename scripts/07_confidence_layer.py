@@ -46,8 +46,10 @@ def main():
     with rasterio.open(C.OUTPUTS / "terrain" / "tri_500m.tif") as src:
         tri = src.read(1)
         prof = src.profile.copy()
-    finite = tri[np.isfinite(tri)]
-    t1, t2 = np.percentile(finite, [33.3, 66.7])
+    # Terciles over land cells only (TRI > 0): ocean cells are exactly 0 and
+    # would degenerate the lower break to 0.0, unfairly penalising all land.
+    land = tri[np.isfinite(tri) & (tri > 0)]
+    t1, t2 = np.percentile(land, [33.3, 66.7])
     terrain_score = np.where(tri <= t1, 3, np.where(tri <= t2, 2, 1)).astype("uint8")
 
     conf = np.minimum(dist_score, terrain_score)

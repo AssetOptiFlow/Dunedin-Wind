@@ -17,7 +17,7 @@ import numpy as np
 import rasterio
 import matplotlib
 matplotlib.use("Agg")
-from matplotlib import cm
+from matplotlib import colormaps
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -51,7 +51,7 @@ def raster_overlay(path, kind):
         mask = ~np.isfinite(a)
         vmin, vmax = np.nanpercentile(a[~mask], [1, 99.5])
         norm = np.clip((a - vmin) / (vmax - vmin), 0, 1)
-        rgba = (cm.get_cmap(GUST_CMAP)(norm) * 255).astype("uint8")
+        rgba = (colormaps[GUST_CMAP](norm) * 255).astype("uint8")
         rgba[..., 3] = np.where(mask, 0, 200)
     else:  # confidence, categorical uint8 1..3 (0 = nodata)
         mask = (a == (nodata or 0))
@@ -68,7 +68,7 @@ def raster_overlay(path, kind):
 
 def ramp_uri(vmin, vmax):
     grad = np.tile(np.linspace(0, 1, 256), (18, 1))
-    rgba = (cm.get_cmap(GUST_CMAP)(grad) * 255).astype("uint8")
+    rgba = (colormaps[GUST_CMAP](grad) * 255).astype("uint8")
     buf = io.BytesIO()
     Image.fromarray(rgba).save(buf, format="PNG")
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
@@ -111,7 +111,9 @@ def main():
         "@SCHEME@": scheme,
         "@ZONE_COLORS@": json.dumps(ZONE_COLORS),
         "@UNCERTAINTY@": C.UNCERTAINTY_STATEMENT,
-        "@YEARS@": f"{min(clim['years'])}-{max(clim['years'])}",
+        "@YEARS@": (f"{min(clim['years'])}-{max(clim['years'])}"
+                    if len(clim["years"]) > 1
+                    else f"{clim['years'][0]} (single year, provisional)"),
         "@CENTER@": json.dumps([(C.BBOX["south"] + C.BBOX["north"]) / 2,
                                 (C.BBOX["west"] + C.BBOX["east"]) / 2]),
     }.items():
@@ -209,7 +211,8 @@ legend.onAdd = () => {
   d.innerHTML = `
     <h4>p99 gust estimate (m/s), ERA5 @YEARS@</h4>
     <img src="@RAMP_URI@" style="width:100%;height:12px"><div class="row"
-      style="justify-content:space-between"><span>@VMIN@</span><span>@VMAX@</span></div>
+      style="justify-content:space-between"><span>@VMIN@</span>
+      <span style="color:#666">1&ndash;99.5 pctile stretch</span><span>@VMAX@</span></div>
     <h4>Exposure zones (@SCHEME@ breaks)</h4>@ZONE_ROWS@
     <h4>Direction arrows</h4>
     <div class="row">point downwind; size/colour = local p99 gust</div>
