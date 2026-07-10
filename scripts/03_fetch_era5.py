@@ -12,8 +12,10 @@ The ERA5 licence must be accepted once at
 https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels
 (otherwise the first request returns 403).
 
-Per-year requests (~26k fields each, well under the CDS cap) with
-resume-on-existing-file, so the 30-year loop is restartable.
+Per-MONTH requests with resume-on-existing-file, so the 30-year loop is
+restartable. (Per-year requests fail on the new CDS with "cost limits
+exceeded" for hourly netcdf — observed 2026-07-10 — so we chunk monthly,
+~2.2k fields per request.)
 """
 import argparse
 import sys
@@ -38,10 +40,11 @@ def check_rc():
         )
 
 
-def fetch_year(client, year: int, dest: Path) -> float:
-    """Retrieve one year; returns elapsed seconds. Skips if file exists."""
+def fetch_month(client, year: int, month: int, dest: Path) -> float:
+    """Retrieve one month; returns elapsed seconds. Skips if file exists."""
     if dest.exists() and dest.stat().st_size > 0:
-        print(f"  {year}: exists ({dest.stat().st_size/1e6:.1f} MB), skipping")
+        print(f"  {year}-{month:02d}: exists "
+              f"({dest.stat().st_size/1e6:.1f} MB), skipping", flush=True)
         return 0.0
     t0 = time.time()
     client.retrieve(
@@ -50,7 +53,7 @@ def fetch_year(client, year: int, dest: Path) -> float:
             "product_type": ["reanalysis"],
             "variable": C.ERA5_VARIABLES,
             "year": [str(year)],
-            "month": [f"{m:02d}" for m in range(1, 13)],
+            "month": [f"{month:02d}"],
             "day": [f"{d:02d}" for d in range(1, 32)],
             "time": [f"{h:02d}:00" for h in range(24)],
             # N, W, S, E
@@ -63,8 +66,15 @@ def fetch_year(client, year: int, dest: Path) -> float:
         str(dest),
     )
     dt = time.time() - t0
-    print(f"  {year}: {dest.stat().st_size/1e6:.1f} MB in {dt/60:.1f} min")
+    print(f"  {year}-{month:02d}: {dest.stat().st_size/1e6:.2f} MB "
+          f"in {dt:.0f} s", flush=True)
     return dt
+
+
+def fetch_year(client, year: int) -> float:
+    return sum(
+        fetch_month(client, year, m, C.ERA5_DIR / f"era5_{year}_{m:02d}.nc")
+        for m in range(1, 13))
 
 
 def main():
@@ -89,7 +99,7 @@ def main():
 
     total = 0.0
     for y in years:
-        total += fetch_year(client, y, C.ERA5_DIR / f"era5_{y}.nc")
+        total += fetch_year(client, y)
     print(f"done: {len(years)} year(s), {total/60:.1f} min total")
 
 
