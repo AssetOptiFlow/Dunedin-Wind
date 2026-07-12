@@ -126,8 +126,32 @@ def main():
     # Future strike-point layer (MetService NZLDN extract or WWLLN archive)
     # slots in beside `lightning` here when point data is obtained.
 
+    # Optional substation layer: only if script 12 has produced the stats.
+    subs_js = subs_entry = subs_legend = ""
+    subs_p = C.OUTPUTS / "substations_exposure.geojson"
+    if subs_p.exists():
+        subs_js = f"""const subs = L.geoJSON({subs_p.read_text(encoding="utf-8")}, {{
+  style: {{color: '#222', weight: 2, dashArray: '5 3', fillOpacity: 0}},
+  onEachFeature: (f, l) => {{
+    const p = f.properties;
+    l.bindPopup(`<b>${{p.name}}</b> — ${{p.gxp}}<br>` +
+      `p99 gust mean ${{p.gust99_mean_kmh}} / max ${{p.gust99_max_kmh}} km/h<br>` +
+      `dominant Zone ${{p.dominant_zone}}, ${{p.pct_zone_4_5}}% of area in Zones 4–5<br>` +
+      `${{p.pct_conf_low}}% of area low-confidence` +
+      (p.coverage_pct < 100 ? `<br>(${{p.coverage_pct}}% inside analysis extent)` : '') +
+      `<br><i>${{p.note}}</i>`);
+  }}
+}});"""
+        subs_entry = "'Zone substation areas (Aurora)': subs,"
+        subs_legend = ("\n    <h4>Zone substation areas</h4>"
+                       "\n    <div class=\"row\">dashed outlines; click for "
+                       "per-substation exposure stats</div>")
+
     html = HTML_TEMPLATE
     for k, v in {
+        "@SUBS_JS@": subs_js,
+        "@SUBS_ENTRY@": subs_entry,
+        "@SUBS_LEGEND@": subs_legend,
         "@LIGHTNING_JS@": lightning_js,
         "@LIGHTNING_ENTRY@": lightning_entry,
         "@LIGHTNING_LEGEND@": lightning_legend,
@@ -193,6 +217,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 const gust = L.imageOverlay('@GUST_URI@', @GUST_BOUNDS@, {opacity: .75});
 const confidence = L.imageOverlay('@CONF_URI@', @CONF_BOUNDS@, {opacity: .8});
 @LIGHTNING_JS@
+@SUBS_JS@
 
 const zoneColors = @ZONE_COLORS@;
 const zones = L.geoJSON(@ZONES@, {
@@ -238,6 +263,7 @@ L.control.layers(null, {
   'Direction arrows': arrows,
   'Confidence band': confidence,
   @LIGHTNING_ENTRY@
+  @SUBS_ENTRY@
   'Stations (context)': stations,
 }, {collapsed: false}).addTo(map);
 
@@ -257,6 +283,7 @@ legend.onAdd = () => {
     <div class="row"><span class="swatch" style="background:rgb(254,196,79)"></span>medium</div>
     <div class="row"><span class="swatch" style="background:rgb(215,48,39)"></span>low — sparse stations and/or complex terrain</div>
     @LIGHTNING_LEGEND@
+    @SUBS_LEGEND@
     <div class="uncert">@UNCERTAINTY@</div>`;
   return d;
 };

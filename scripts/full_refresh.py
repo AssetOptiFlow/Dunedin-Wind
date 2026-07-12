@@ -28,6 +28,7 @@ STEPS = [
     ("zones", ["08_zones.py", "--classify", "jenks"]),
     ("arrows", ["09_arrows.py"]),
     ("lightning", ["11_lightning_density.py"]),  # self-skips if source absent
+    ("substations", ["12_substation_summary.py"]),  # self-skips if source absent
     ("webmap", ["10_build_webmap.py"]),
 ]
 

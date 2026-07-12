@@ -1,5 +1,50 @@
 # BUILD_LOG
 
+## 2026-07-12 — Session 5: Aurora zone-substation reach polygons
+
+**Goal.** Ingest Jamie's Aurora zone-substation reach KML; add a boundary
+overlay + per-substation exposure summaries; use the footprint to scope the
+Otago scale-up.
+
+**Decisions.**
+- Source: "Aurora Network GIS File 2025.kml" (published Aurora file, copied
+  in by Jamie). One layer, 39 features: 37 reach polygons + 2 point-only
+  entries (Earnscleugh, Smith Street — no reach polygon in the file).
+  Attributes: substation name, pricing region, GXP, feeders, voltages.
+  Converted to data/substations/aurora_zone_substations.geojson (raw KML and
+  conversion stay in gitignored data/; **licence of the published file not
+  yet confirmed — public webmap embedding of boundaries pending Jamie's
+  call, see below**).
+- Footprint insight for the scale-up: Aurora's service area is TWO disjoint
+  clusters — Dunedin (17 polygons, entirely within the current bbox) and
+  Central Otago/Queenstown (20 polygons, ~168.3–170.0 E, −45.55 to −44.2).
+  "Full Otago" should therefore be a second modelling domain around the
+  Central cluster, not one giant rectangle.
+- New script 12: per-substation zonal stats over the 30-yr gust surface
+  (mean/max p99 gust km/h, dominant zone, % area in Zones 4–5, % area
+  low-confidence, coverage %). Self-skips if source absent; wired into
+  full_refresh before the webmap step. Webmap: dashed-outline layer with
+  stats popups (conditional, like lightning).
+
+**Results.** 17 Dunedin substations summarised. Max p99 gust: Port Chalmers
+105 km/h, Andersons Bay 104, North East Valley 104 (41% of NV's area is
+low-confidence — flagged in table and popup). Lowest: St Kilda 82, North
+City 85. Corstorphine/Kaikorai Valley have ~90–95% of area in Zones 4–5.
+Full table: outputs/substations_exposure.csv.
+
+**Residuals & caveats.**
+- Reach polygons are electrical service areas, not weather surfaces; stats
+  inherit every wind-layer caveat (screening, unvalidated).
+- Two substations have no reach polygon in the published file.
+- Edge headless still wedged — substation layer verified statically only.
+
+**Checkpoints.** Pending Jamie: (a) confirm the KML's licence/source URL for
+BUILD_LOG provenance; (b) whether substation boundaries may be embedded in
+the public webmap on GitHub, or the layer stays local-build only.
+
+**Next.** Jamie's licence call → push or local-only rebuild. Otago scale-up
+plan can now be drawn around the Central Otago/Queenstown cluster.
+
 ## 2026-07-12 — Session 4: historical lightning layer (code ready, awaiting data export)
 
 **Goal.** Add a historical lightning strike layer for the bbox (Jamie's ask).
