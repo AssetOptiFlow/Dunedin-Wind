@@ -29,6 +29,7 @@ LEAFLET = {
     "leaflet.css": "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
 }
 GUST_CMAP = "YlOrRd"
+LIGHTNING_CMAP = "Blues"
 CONF_COLORS = {3: (26, 152, 80, 140), 2: (254, 196, 79, 150), 1: (215, 48, 39, 150)}
 ZONE_COLORS = ["#2c7bb6", "#abd9e9", "#ffffbf", "#fdae61", "#d7191c"]
 
@@ -47,11 +48,14 @@ def raster_overlay(path, kind):
         a = src.read(1)
         b = src.bounds
         nodata = src.nodata
-    if kind == "gust":
+    if kind in ("gust", "lightning"):
+        if nodata is not None:
+            a = np.where(a == nodata, np.nan, a)
         mask = ~np.isfinite(a)
         vmin, vmax = np.nanpercentile(a[~mask], [1, 99.5])
+        cmap = GUST_CMAP if kind == "gust" else LIGHTNING_CMAP
         norm = np.clip((a - vmin) / (vmax - vmin), 0, 1)
-        rgba = (colormaps[GUST_CMAP](norm) * 255).astype("uint8")
+        rgba = (colormaps[cmap](norm) * 255).astype("uint8")
         rgba[..., 3] = np.where(mask, 0, 200)
     else:  # confidence, categorical uint8 1..3 (0 = nodata)
         mask = (a == (nodata or 0))
@@ -66,9 +70,9 @@ def raster_overlay(path, kind):
     return uri, [[b.bottom, b.left], [b.top, b.right]], vmin, vmax
 
 
-def ramp_uri(vmin, vmax):
+def ramp_uri(cmap=GUST_CMAP):
     grad = np.tile(np.linspace(0, 1, 256), (18, 1))
-    rgba = (colormaps[GUST_CMAP](grad) * 255).astype("uint8")
+    rgba = (colormaps[cmap](grad) * 255).astype("uint8")
     buf = io.BytesIO()
     Image.fromarray(rgba).save(buf, format="PNG")
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
@@ -103,8 +107,30 @@ def main():
         f'</span>Zone {z} &nbsp;{zone_ranges[z]} km/h</div>'
         for z in sorted(zone_ranges))
 
+    # Optional lightning layer: only if script 11 has produced the display tif.
+    lightning_js = lightning_entry = lightning_legend = ""
+    lt_display = C.OUTPUTS / "lightning" / "lightning_density_display_wgs84.tif"
+    lt_meta_p = C.OUTPUTS / "lightning" / "lightning_meta.json"
+    if lt_display.exists() and lt_meta_p.exists():
+        lt_meta = json.loads(lt_meta_p.read_text())
+        lt_uri, lt_bounds, lt_vmin, lt_vmax = raster_overlay(lt_display, "lightning")
+        lightning_js = (f"const lightning = L.imageOverlay('{lt_uri}', "
+                        f"{json.dumps(lt_bounds)}, {{opacity: .75}});")
+        lightning_entry = f"'Lightning strike density ({lt_meta['period']})': lightning,"
+        lightning_legend = f"""
+    <h4>Lightning strike density ({lt_meta['period']})</h4>
+    <img src="{ramp_uri(LIGHTNING_CMAP)}" style="width:100%;height:12px"><div class="row"
+      style="justify-content:space-between"><span>{lt_vmin:.02f}</span>
+      <span style="color:#666">strikes/km&sup2;/yr</span><span>{lt_vmax:.02f}</span></div>
+    <div class="row" style="color:#444">{lt_meta['note']} ({lt_meta['licence']})</div>"""
+    # Future strike-point layer (MetService NZLDN extract or WWLLN archive)
+    # slots in beside `lightning` here when point data is obtained.
+
     html = HTML_TEMPLATE
     for k, v in {
+        "@LIGHTNING_JS@": lightning_js,
+        "@LIGHTNING_ENTRY@": lightning_entry,
+        "@LIGHTNING_LEGEND@": lightning_legend,
         "@LEAFLET_CSS@": vendor("leaflet.css"),
         "@LEAFLET_JS@": vendor("leaflet.js"),
         "@GUST_URI@": gust_uri,
@@ -114,7 +140,7 @@ def main():
         "@ZONES@": zones,
         "@ARROWS@": arrows,
         "@STATIONS@": stations,
-        "@RAMP_URI@": ramp_uri(vmin, vmax),
+        "@RAMP_URI@": ramp_uri(),
         "@VMIN@": f"{vmin * C.MS_TO_KMH:.0f}",
         "@VMAX@": f"{vmax * C.MS_TO_KMH:.0f}",
         "@ZONE_ROWS@": zone_rows,
@@ -166,6 +192,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const gust = L.imageOverlay('@GUST_URI@', @GUST_BOUNDS@, {opacity: .75});
 const confidence = L.imageOverlay('@CONF_URI@', @CONF_BOUNDS@, {opacity: .8});
+@LIGHTNING_JS@
 
 const zoneColors = @ZONE_COLORS@;
 const zones = L.geoJSON(@ZONES@, {
@@ -210,6 +237,7 @@ L.control.layers(null, {
   'Exposure zones (1–5)': zones,
   'Direction arrows': arrows,
   'Confidence band': confidence,
+  @LIGHTNING_ENTRY@
   'Stations (context)': stations,
 }, {collapsed: false}).addTo(map);
 
@@ -228,6 +256,7 @@ legend.onAdd = () => {
     <div class="row"><span class="swatch" style="background:rgb(26,152,80)"></span>high</div>
     <div class="row"><span class="swatch" style="background:rgb(254,196,79)"></span>medium</div>
     <div class="row"><span class="swatch" style="background:rgb(215,48,39)"></span>low — sparse stations and/or complex terrain</div>
+    @LIGHTNING_LEGEND@
     <div class="uncert">@UNCERTAINTY@</div>`;
   return d;
 };

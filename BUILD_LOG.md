@@ -1,5 +1,50 @@
 # BUILD_LOG
 
+## 2026-07-12 — Session 4: historical lightning layer (code ready, awaiting data export)
+
+**Goal.** Add a historical lightning strike layer for the bbox (Jamie's ask).
+
+**Decisions.**
+- Source research (verified live): NZLDN point data is commercial-only
+  (Transpower-owned, MetService-exclusive; 2023 OIA refused). The open,
+  authoritative option is MfE layer 52851 "Lightning strike density,
+  2000-14" — NZLDN-derived, 5 km cells, EPSG:2193, strikes per 25 km^2
+  cell/yr, CC BY 3.0 NZ. Jamie chose: build this now; park point data
+  (MetService extract, or WWLLN archive — Otago Uni hosts a station).
+  Blitzortung ruled out: terms prohibit risk-analysis use. No geostationary
+  lightning coverage at -46°.
+- Resolution honesty: coastal Otago ~0.02-0.08 CG strikes/km^2/yr → ~10-30
+  strikes per 5 km cell over the 15-yr record → 5 km is the finest
+  defensible grid; NOT resampled to the 500 m analysis grid. Jamie chose
+  Gaussian display smoothing with the 5 km provenance stated in the legend;
+  the honest nearest-neighbour 5 km GeoTIFF ships alongside.
+- Script 11 gates on a user action (free MfE/Koordinates account + GeoTIFF
+  export) exactly like script 03's CDS gate, and self-skips (exit 0) so
+  full_refresh.py never blocks on this optional layer. Webmap injects the
+  layer + legend section (Blues ramp, CC-BY attribution — a licence
+  requirement) only when outputs exist; a commented slot is left for a
+  future strike-points layer.
+
+**Provenance.** No real data ingested yet. Code path verified end-to-end
+with a synthetic 5 km EPSG:2193 raster (deleted after test, never committed);
+gate/skip behaviour and clean webmap rebuild without the layer both verified.
+
+**Residuals & caveats.**
+- The MfE record is 2000-14 — it will not match the wind layers' 1991-2020
+  window; period stated in layer name and legend.
+- Density says nothing about individual strikes; strike-vs-fault correlation
+  needs the parked point-data path.
+- Headless-Edge visual verification deferred (Edge headless wedged
+  system-wide this session, even on about:blank); HTML verified statically.
+  Screenshot check to run when Edge recovers / after real data lands.
+
+**Checkpoints.** Source choice + display smoothing confirmed by Jamie
+(2026-07-12). Awaiting: his MfE export to activate the layer.
+
+**Next.** Jamie exports layer 52851 GeoTIFF (EPSG:2193) to
+data/lightning/lightning_density_2000_14.tif → rerun scripts 11 + 10 →
+visual check → commit refreshed webmap.
+
 ## 2026-07-12 — Session 3: full 30-year product
 
 **Goal.** Complete the 1991-2020 pull and rebuild everything on the full

@@ -88,6 +88,24 @@ LAND_MIN_ELEV_M = 1.0        # zones are clipped to land (council-map style)
 # Internal rasters/science stay in m/s; user-facing display is km/h.
 MS_TO_KMH = 3.6
 
+# --- Lightning (historical strike density) -----------------------------------
+# Source: MfE "Lightning strike density, 2000-14" (layer 52851), derived from
+# the NZ Lightning Detection Network (NZLDN). 5 km cells, EPSG:2193, units =
+# ground strikes per 25 km^2 cell per year. Licence CC BY 3.0 NZ.
+# NZLDN point data is commercial (MetService) - density raster only.
+LIGHTNING_DIR = DATA / "lightning"
+LIGHTNING_SOURCE_TIF = LIGHTNING_DIR / "lightning_density_2000_14.tif"
+LIGHTNING_SOURCE_URL = "https://data.mfe.govt.nz/layer/52851-lightning-strike-density-200014/"
+LIGHTNING_NATIVE_RES_M = 5000     # honest resolution; never resampled to 500 m
+LIGHTNING_DISPLAY_SIGMA_M = 2500  # Gaussian display smoothing only
+LIGHTNING_PERIOD = "2000-14"
+LIGHTNING_ATTRIBUTION = "NZLDN via MfE, CC BY 3.0 NZ"
+LIGHTNING_UNCERTAINTY = (
+    "Underlying data 5 km native (display smoothed). Coastal Otago strike "
+    "counts are low: roughly 10-30 strikes per 5 km cell over 2000-14, so "
+    "finer resolution is not statistically supportable."
+)
+
 UNCERTAINTY_STATEMENT = (
     "Modelled screening estimate (ERA5 + WindNinja terrain adjustment). "
     "Not a validated measurement; do not use for engineering design."

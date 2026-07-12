@@ -24,8 +24,16 @@ scaling to full Otago.
    terrain complexity (TRI), explicit no-station flag.
 6. 5 exposure zones (Zone 1 lowest … Zone 5 highest), polygonised.
 7. Dominant gust-direction arrows on a ~2.5 km grid.
-8. Self-contained Leaflet webmap (`webmap/index.html`) — 4 toggleable layers +
+8. Self-contained Leaflet webmap (`webmap/index.html`) — toggleable layers +
    combined legend. Only network dependency is the OSM basemap tiles.
+9. Optional: historical lightning ground-strike density (NZLDN-derived MfE
+   raster, 2000–14, CC BY 3.0 NZ) at its native 5 km — coastal Otago sees
+   only ~10–30 strikes per 5 km cell over the whole record, so finer
+   resolution is not statistically supportable (display is smoothed; the
+   honest 5 km GeoTIFF ships alongside). NZLDN *point* data is commercial
+   (MetService); WWLLN archive (~3 km accuracy, ~30% detection efficiency,
+   Otago University hosts a station) is a possible future paid path for
+   strike-vs-fault correlation.
 
 ## Known uncertainty drivers (deliberate, documented)
 
