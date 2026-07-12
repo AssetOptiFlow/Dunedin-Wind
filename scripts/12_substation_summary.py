@@ -26,7 +26,7 @@ import geopandas as gpd
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import config as C
 
-SRC = C.DATA / "substations" / "aurora_zone_substations.geojson"
+SRC = C.SHARED_DATA / "substations" / "aurora_zone_substations.geojson"
 CONF_NAMES = {3: "high", 2: "medium", 1: "low"}
 
 
