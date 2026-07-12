@@ -43,6 +43,12 @@ def main():
         transform, shape = s.transform, s.shape
         if s.nodata is not None:
             gust = np.where(gust == s.nodata, np.nan, gust)
+    # Worst-case surface: max over all 8 sectors (not frequency-weighted) —
+    # the "absolute maximum" screening estimate for a cell.
+    with rasterio.open(C.OUTPUTS / "gust" / "gust99_worstcase_500m_wgs84.tif") as s:
+        worst = s.read(1)
+        if s.nodata is not None:
+            worst = np.where(worst == s.nodata, np.nan, worst)
     with rasterio.open(C.OUTPUTS / "zones_500m_wgs84.tif") as s:
         zones = s.read(1)
     with rasterio.open(C.OUTPUTS / "confidence" / "confidence_500m_wgs84.tif") as s:
@@ -73,6 +79,7 @@ def main():
             "coverage_pct": round(100 * coverage),
             "gust99_mean_kmh": round(float(np.nanmean(g)) * C.MS_TO_KMH),
             "gust99_max_kmh": round(float(np.nanmax(g)) * C.MS_TO_KMH),
+            "absolute_max_kmh": round(float(np.nanmax(worst[cells])) * C.MS_TO_KMH),
             "dominant_zone": int(np.bincount(z).argmax()) if z.size else None,
             "pct_zone_4_5": round(100 * float((z >= 4).mean())) if z.size else None,
             "pct_conf_low": round(100 * float((cf == 1).mean())) if cf.size else None,
@@ -81,14 +88,14 @@ def main():
         rows.append({**stats, "geometry": r.geometry})
 
     out = gpd.GeoDataFrame(rows, crs=C.CRS_WGS84)
-    out = out.sort_values("gust99_max_kmh", ascending=False)
+    out = out.sort_values("absolute_max_kmh", ascending=False)
     out.to_file(C.OUTPUTS / "substations_exposure.geojson", driver="GeoJSON")
     out.drop(columns="geometry").to_csv(
         C.OUTPUTS / "substations_exposure.csv", index=False)
 
     print(f"{len(out)} substations summarised (of {len(gdf)} polygons):")
-    cols = ["name", "gust99_mean_kmh", "gust99_max_kmh", "dominant_zone",
-            "pct_zone_4_5", "pct_conf_low", "coverage_pct"]
+    cols = ["name", "gust99_mean_kmh", "gust99_max_kmh", "absolute_max_kmh",
+            "dominant_zone", "pct_zone_4_5", "pct_conf_low", "coverage_pct"]
     print(out[cols].to_string(index=False))
 
 

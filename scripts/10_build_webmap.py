@@ -136,6 +136,7 @@ def main():
     const p = f.properties;
     l.bindPopup(`<b>${{p.name}}</b> — ${{p.gxp}}<br>` +
       `p99 gust mean ${{p.gust99_mean_kmh}} / max ${{p.gust99_max_kmh}} km/h<br>` +
+      `absolute max (worst sector) ${{p.absolute_max_kmh}} km/h<br>` +
       `dominant Zone ${{p.dominant_zone}}, ${{p.pct_zone_4_5}}% of area in Zones 4–5<br>` +
       `${{p.pct_conf_low}}% of area low-confidence` +
       (p.coverage_pct < 100 ? `<br>(${{p.coverage_pct}}% inside analysis extent)` : '') +

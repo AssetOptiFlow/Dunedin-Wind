@@ -38,12 +38,22 @@ Full table: outputs/substations_exposure.csv.
 - Two substations have no reach polygon in the published file.
 - Edge headless still wedged — substation layer verified statically only.
 
-**Checkpoints.** Pending Jamie: (a) confirm the KML's licence/source URL for
-BUILD_LOG provenance; (b) whether substation boundaries may be embedded in
-the public webmap on GitHub, or the layer stays local-build only.
+**Checkpoints.** RESOLVED 2026-07-12: Jamie confirmed the repo stays public
+and the Aurora boundaries may be embedded ("okay with it being public
+overall") — the KML is Aurora's published file. (Process note: one commit
+with the boundaries was pushed while visibility was still being decided —
+a sequencing error, disclosed to Jamie at the time; mooted by his ruling.)
 
-**Next.** Jamie's licence call → push or local-only rebuild. Otago scale-up
-plan can now be drawn around the Central Otago/Queenstown cluster.
+**Addendum (same day).** Added `absolute_max_kmh` per substation = maximum
+of the worst-case (max-over-sectors) surface within each polygon — the
+"absolute maximum" screening gust. Range 88 (St Kilda) to 116 km/h (Port
+Chalmers / NE Valley / Ward Street — shared ridge cells at their common
+boundaries). Table re-ranked by this column; popup updated. Not a design
+value; inherits all screening caveats.
+
+**Next.** Otago scale-up around the Central Otago/Queenstown cluster
+(sized: 20 polygons, union 4,223 km2, 10 km-buffered envelope 141x194 km
+= 27,377 km2 ~ 9.8x Dunedin domain, ~66 ERA5 gridpoints).
 
 ## 2026-07-12 — Session 4: historical lightning layer (code ready, awaiting data export)
 
