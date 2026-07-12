@@ -39,11 +39,25 @@ gate/skip behaviour and clean webmap rebuild without the layer both verified.
   Screenshot check to run when Edge recovers / after real data lands.
 
 **Checkpoints.** Source choice + display smoothing confirmed by Jamie
-(2026-07-12). Awaiting: his MfE export to activate the layer.
+(2026-07-12). Same day: Jamie delivered the export.
 
-**Next.** Jamie exports layer 52851 GeoTIFF (EPSG:2193) to
-data/lightning/lightning_density_2000_14.tif → rerun scripts 11 + 10 →
-visual check → commit refreshed webmap.
+**Data landed (same session).** Export arrived under Koordinates' original
+filename `LightningStrikeCount5km_02_AnAve_div14.tif` (+ metadata sidecars,
+kept for provenance); config repointed rather than renaming. Shipped
+metadata confirms EPSG:2193, 5 km, strikes/25km^2/yr (annual average over
+the 14-yr record), CC BY 3.0 NZ. Processed: bbox density 0.00-0.08
+strikes/km^2/yr, mean 0.022 — matching the published coastal-Otago band and
+confirming the 5 km resolution decision (~8 strikes per cell over the whole
+record at the mean; native values visibly quantised at 0/1/2 strikes per
+cell per year). Spatial pattern sensible: higher inland toward hill country,
+near-zero coastal/marine. Webmap rebuilt with the layer + legend +
+attribution; verified statically (Edge headless wedged system-wide this
+session — screenshot re-verify pending; HTML layer/legend/attribution
+entries all confirmed present).
+
+**Next.** Visual screenshot check when Edge recovers. Parked: point-data
+paths (MetService NZLDN extract / WWLLN via Otago Uni) for any future
+strike-vs-fault correlation.
 
 ## 2026-07-12 — Session 3: full 30-year product
 

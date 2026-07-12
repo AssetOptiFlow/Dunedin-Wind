@@ -94,7 +94,9 @@ MS_TO_KMH = 3.6
 # ground strikes per 25 km^2 cell per year. Licence CC BY 3.0 NZ.
 # NZLDN point data is commercial (MetService) - density raster only.
 LIGHTNING_DIR = DATA / "lightning"
-LIGHTNING_SOURCE_TIF = LIGHTNING_DIR / "lightning_density_2000_14.tif"
+# Koordinates export keeps the original filename ("AnAve_div14" = annual
+# average over the 14-year record; values are already strikes/25km^2/yr).
+LIGHTNING_SOURCE_TIF = LIGHTNING_DIR / "LightningStrikeCount5km_02_AnAve_div14.tif"
 LIGHTNING_SOURCE_URL = "https://data.mfe.govt.nz/layer/52851-lightning-strike-density-200014/"
 LIGHTNING_NATIVE_RES_M = 5000     # honest resolution; never resampled to 500 m
 LIGHTNING_DISPLAY_SIGMA_M = 2500  # Gaussian display smoothing only
