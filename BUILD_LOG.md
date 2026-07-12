@@ -1,5 +1,49 @@
 # BUILD_LOG
 
+## 2026-07-12 — Session 3: full 30-year product
+
+**Goal.** Complete the 1991-2020 pull and rebuild everything on the full
+climatological normal.
+
+**Decisions / events.**
+- Pull completed 04:33 (all 225 files: 180 monthly 1991-2005 + 45
+  per-variable yearly 2006-2020). Total ERA5 payload ~180 MB raw.
+- The automatic post-pull refresh crashed at the climatology step 8 s after
+  the last download (native crash, transient — most likely a file-flush race
+  on the final netCDF). Manual rerun succeeded unchanged. If this recurs,
+  add a settle delay between steps in full_refresh.py.
+- Zip-validation false alarm: single-variable CDS deliveries are PLAIN
+  netCDF (HDF5 magic), not zips — only multi-stream (multi-variable)
+  requests get zip-wrapped. Script 04 already handles both via magic bytes.
+- WindNinja speed-aware cache behaved as designed: 5 sectors re-ran with
+  changed 30-yr speeds, 3 (NE, SE, W) skipped within the 0.05 m/s tolerance.
+
+**Provenance.** ERA5 hourly 1991-2020 (fg10, u10, v10), CDS
+reanalysis-era5-single-levels, retrieved 2026-07-10..12, Copernicus licence.
+2,103,936 samples across 8 grid points x 30 years.
+
+**Results (30-yr, vs 14-yr interim / 2005-only).**
+- Domain p99 gust 22.3 m/s (22.0 / 20.3). W+SW = 84% of top-decile gust
+  hours (81% / 82%) — the southwesterly regime is stable across records.
+- Gust surface 13.8-31.2 m/s, mean 23.0; worst-case max 35.5 — below the
+  ~45 m/s design gust; max/min ratio 2.26 (offshore minima, as before).
+- Zone breaks (smoothed field): 20.6/22.1/22.6/23.0/23.5/24.7 m/s
+  (74-89 km/h). Zone areas 103/305/603/576/147 km^2. Geometry consistent
+  with the interim map — the record length shifts levels (~+0.3 m/s over
+  the 14-yr interim) far more than shapes.
+- Legend now reads "ERA5 1991-2020" (interim tag auto-cleared).
+
+**Residuals & caveats.** All prior residuals stand (ERA5 coarseness, solver
+direction-reversal symmetry, no station validation, generalised zone
+cartography). The climatological basis is no longer provisional.
+
+**Checkpoints.** Checkpoint 2's held item (30-yr pull) closed out — approved
+by Jamie 2026-07-10, delivered this session.
+
+**Next.** Candidates, Jamie's call: NZS 3604-style design-gust layer (annual
+maxima now support a Gumbel fit); GitHub Pages deploy; Otago scale-up plan;
+conda lockfile export.
+
 ## 2026-07-11 — Session 2: pull recovery, fetch restructure, interim 14-yr refresh
 
 **Goal.** Recover the 30-yr pull after a power cut; work around a degraded
