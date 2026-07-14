@@ -1,5 +1,40 @@
 # BUILD_LOG
 
+## 2026-07-15 — Session 6: root cause of the climatology crashes (CORRECTION)
+
+**Goal.** Unblock the central chain, which failed three times at the
+climatology step (exit 0xC06D007F).
+
+**Correction of two earlier diagnoses.** Both prior explanations were wrong:
+- "File-flush race" (Session 3, Dunedin): wrong — a 30 s settle delay did
+  not prevent recurrence.
+- "combine_by_coords over ~90 datasets crashes natively" (2026-07-14 commit
+  message): unproven and likely wrong — the old code was never retested
+  under a correct environment.
+
+**Actual root cause (isolated by elimination, 2026-07-15).** The detached
+runner was launched with the env's bare python.exe (Start-Process), which
+lacks conda activation PATH entries. Under that environment, matplotlib's
+native rendering stack (hist/polar/savefig — reproduced with pure random
+data, no netCDF involved) crashes with 0xC06D007F. Script 04 loads all 30
+years fine and dies drawing its diagnostics figure. Every "manual rerun
+worked" data point was a conda-run rerun — masking the launcher difference.
+netCDF4/xarray/cdsapi are PATH-tolerant, which is why the 36 h fetch step
+never failed.
+
+**Fix.** (a) full_refresh.py now prepends the standard conda activation
+dirs to PATH at startup (launcher-proof for all child steps); (b) detached
+launches now go through `conda run` regardless. Verified: climatology
+passed under the fixed launcher at 07:22 and WindNinja is running.
+
+**Kept.** The per-year loading refactor of script 04 stays — not because it
+fixed the crash (it did not), but because it is regression-verified
+(Dunedin bit-identical) and keeps peak memory flat on larger domains.
+
+**Residuals.** The 2026-07-14 commit message attributes the crash to
+combine_by_coords; per convention history is not rewritten — this entry is
+the correction of record.
+
 ## 2026-07-12 — Session 5: Aurora zone-substation reach polygons
 
 **Goal.** Ingest Jamie's Aurora zone-substation reach KML; add a boundary

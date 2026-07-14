@@ -7,6 +7,7 @@ run it again. WindNinja outputs are cleared first because the per-sector
 input speeds change with the new climatology. Does NOT git commit — results
 are reviewed before committing.
 """
+import os
 import subprocess
 import sys
 import time
@@ -14,6 +15,18 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import config as C
+
+# Conda-activation bootstrap: when launched with the env's bare python.exe
+# (e.g. detached via Start-Process), the env's native DLL dirs are missing
+# from PATH and matplotlib's rendering stack crashes child steps with
+# 0xC06D007F (diagnosed 2026-07-15; hit the climatology step on both
+# domains). Prepend the standard activation dirs so every child inherits.
+_env = Path(sys.executable).parent
+_extra = [_env / "Library" / "bin", _env / "Library" / "usr" / "bin",
+          _env / "Library" / "mingw-w64" / "bin", _env / "Scripts",
+          _env / "bin", _env]
+os.environ["PATH"] = os.pathsep.join(
+    [str(p) for p in _extra] + [os.environ.get("PATH", "")])
 
 LOG = C.DIAGNOSTICS / "full_refresh.log"
 PY = sys.executable

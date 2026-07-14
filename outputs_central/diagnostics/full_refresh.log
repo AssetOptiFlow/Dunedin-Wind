@@ -1,0 +1,388 @@
+2026-07-12 21:44:38  === full refresh started ===
+2026-07-12 21:44:38  cleared 0 cached WindNinja outputs
+2026-07-12 21:44:38  --- ERA5 30-yr pull: 03_fetch_era5.py --all
+  1991 fg10: 1.95 MB in 16.7 min
+  1991 u10: 2.15 MB in 14.9 min
+  1991 v10: 2.11 MB in 12.7 min
+  1992 fg10: 1.95 MB in 16.7 min
+  1992 u10: 2.15 MB in 14.8 min
+  1992 v10: 2.11 MB in 14.7 min
+  1993 fg10: 1.95 MB in 14.8 min
+  1993 u10: 2.15 MB in 14.8 min
+  1993 v10: 2.09 MB in 14.8 min
+  1994 fg10: 1.95 MB in 14.9 min
+  1994 u10: 2.15 MB in 14.8 min
+  1994 v10: 2.10 MB in 14.7 min
+  1995 fg10: 1.95 MB in 14.7 min
+  1995 u10: 2.15 MB in 14.7 min
+  1995 v10: 2.10 MB in 14.8 min
+  1996 fg10: 1.95 MB in 14.7 min
+  1996 u10: 2.16 MB in 14.7 min
+  1996 v10: 2.11 MB in 14.8 min
+  1997 fg10: 1.95 MB in 14.9 min
+  1997 u10: 2.14 MB in 14.8 min
+  1997 v10: 2.10 MB in 14.8 min
+  1998 fg10: 1.95 MB in 14.7 min
+  1998 u10: 2.15 MB in 14.8 min
+  1998 v10: 2.10 MB in 14.9 min
+  1999 fg10: 1.95 MB in 14.7 min
+  1999 u10: 2.15 MB in 14.9 min
+  1999 v10: 2.10 MB in 14.8 min
+  2000 fg10: 1.95 MB in 14.8 min
+  2000 u10: 2.15 MB in 14.9 min
+  2000 v10: 2.10 MB in 16.8 min
+  2001 fg10: 1.95 MB in 14.7 min
+  2001 u10: 2.15 MB in 12.7 min
+  2001 v10: 2.11 MB in 12.8 min
+  2002 fg10: 1.95 MB in 14.7 min
+  2002 u10: 2.14 MB in 14.7 min
+  2002 v10: 2.10 MB in 12.8 min
+  2003 fg10: 1.95 MB in 14.8 min
+  2003 u10: 2.14 MB in 14.7 min
+  2003 v10: 2.10 MB in 12.7 min
+  2004 fg10: 1.95 MB in 14.8 min
+  2004 u10: 2.15 MB in 14.7 min
+  2004 v10: 2.10 MB in 12.8 min
+  2005 fg10: 1.95 MB in 14.7 min
+  2005 u10: 2.15 MB in 12.7 min
+  2005 v10: 2.10 MB in 12.7 min
+  2006 fg10: 1.95 MB in 12.8 min
+  2006 u10: 2.14 MB in 12.8 min
+  2006 v10: 2.10 MB in 12.7 min
+  2007 fg10: 1.94 MB in 14.7 min
+  2007 u10: 2.15 MB in 12.8 min
+  2007 v10: 2.10 MB in 12.7 min
+  2008 fg10: 1.95 MB in 14.8 min
+  2008 u10: 2.16 MB in 12.7 min
+  2008 v10: 2.11 MB in 12.7 min
+  2009 fg10: 1.95 MB in 14.8 min
+  2009 u10: 2.14 MB in 12.8 min
+  2009 v10: 2.10 MB in 22.8 min
+  2010 fg10: 1.94 MB in 27.0 min
+  2010 u10: 2.15 MB in 37.1 min
+  2010 v10: 2.10 MB in 49.2 min
+  2011 fg10: 1.95 MB in 53.3 min
+  2011 u10: 2.15 MB in 91.9 min
+  2011 v10: 2.11 MB in 98.0 min
+  2012 fg10: 1.95 MB in 85.7 min
+  2012 u10: 2.15 MB in 128.4 min
+  2012 v10: 2.11 MB in 147.1 min
+  2013 fg10: 1.95 MB in 149.5 min
+  2013 u10: 2.15 MB in 71.6 min
+  2013 v10: 2.10 MB in 49.4 min
+  2014 fg10: 1.95 MB in 35.1 min
+  2014 u10: 2.15 MB in 22.9 min
+  2014 v10: 2.11 MB in 12.8 min
+  2015 fg10: 1.95 MB in 20.8 min
+  2015 u10: 2.15 MB in 23.0 min
+  2015 v10: 2.10 MB in 8.7 min
+  2016 fg10: 1.95 MB in 18.9 min
+  2016 u10: 2.15 MB in 12.8 min
+  2016 v10: 2.10 MB in 14.8 min
+  2017 fg10: 1.95 MB in 14.8 min
+  2017 u10: 2.15 MB in 10.7 min
+  2017 v10: 2.10 MB in 14.8 min
+  2018 fg10: 1.95 MB in 18.8 min
+  2018 u10: 2.15 MB in 16.8 min
+  2018 v10: 2.10 MB in 14.8 min
+  2019 fg10: 1.95 MB in 19.0 min
+  2019 u10: 2.14 MB in 10.7 min
+  2019 v10: 2.09 MB in 10.7 min
+  2020 fg10: 1.95 MB in 12.7 min
+  2020 u10: 2.15 MB in 10.6 min
+  2020 v10: 2.10 MB in 14.7 min
+done: 30 year(s), 2150.9 min total
+
+--- stderr ---
+2216afcac2.nc:  54%|#####3    | 1.00M/1.86M [00:07<00:06, 150kB/s]
+802493a2d029316b1193ec2216afcac2.nc: 100%|##########| 1.86M/1.86M [00:09<00:00, 233kB/s]
+                                                                                        
+2026-07-14 08:36:05,680 INFO Request ID is af646dd5-64d2-4eed-b72b-399593b98cf5
+2026-07-14 08:36:06,036 INFO status has been updated to accepted
+2026-07-14 08:36:33,164 WARNING Download format not supported for this dataset. Defaulting to as_source.
+2026-07-14 08:36:33,164 INFO status has been updated to running
+2026-07-14 08:46:39,794 INFO status has been updated to successful
+
+ca8dced3c680d2c24128f39058de2147.nc:   0%|          | 0.00/2.05M [00:00<?, ?B/s]
+ca8dced3c680d2c24128f39058de2147.nc:  49%|####8     | 1.00M/2.05M [00:04<00:04, 260kB/s]
+ca8dced3c680d2c24128f39058de2147.nc:  98%|#########7| 2.00M/2.05M [00:05<00:00, 462kB/s]
+                                                                                        
+2026-07-14 08:46:50,264 INFO Request ID is 91062a4a-2d50-4798-a79b-7b03e702907b
+2026-07-14 08:46:50,701 INFO status has been updated to accepted
+2026-07-14 08:47:44,512 WARNING Download format not supported for this dataset. Defaulting to as_source.
+2026-07-14 08:47:44,512 INFO status has been updated to running
+2026-07-14 08:57:23,287 INFO status has been updated to successful
+
+1a9c1de9dd6866b9e4ad3aa0ca1d61bb.nc:   0%|          | 0.00/2.00M [00:00<?, ?B/s]
+1a9c1de9dd6866b9e4ad3aa0ca1d61bb.nc:  50%|#####     | 1.00M/2.00M [00:03<00:03, 310kB/s]
+1a9c1de9dd6866b9e4ad3aa0ca1d61bb.nc: 100%|##########| 2.00M/2.00M [00:04<00:00, 585kB/s]
+                                                                                        
+2026-07-14 08:57:30,740 INFO Request ID is fb6cb120-5c70-4949-bb4e-71d893724532
+2026-07-14 08:57:31,098 INFO status has been updated to accepted
+2026-07-14 08:57:54,818 INFO status has been updated to running
+2026-07-14 08:58:06,603 WARNING Download format not supported for this dataset. Defaulting to as_source.
+2026-07-14 09:10:05,466 INFO status has been updated to successful
+
+8c7ba67fec53fa6200ad0a34a0e6bb9b.nc:   0%|          | 0.00/1.86M [00:00<?, ?B/s]
+8c7ba67fec53fa6200ad0a34a0e6bb9b.nc:  54%|#####3    | 1.00M/1.86M [00:03<00:03, 301kB/s]
+8c7ba67fec53fa6200ad0a34a0e6bb9b.nc: 100%|##########| 1.86M/1.86M [00:04<00:00, 524kB/s]
+                                                                                        
+2026-07-14 09:10:12,872 INFO Request ID is 3958e66f-38d9-4524-8de4-8f6c77ed5064
+2026-07-14 09:10:13,229 INFO status has been updated to accepted
+2026-07-14 09:11:06,497 WARNING Download format not supported for this dataset. Defaulting to as_source.
+2026-07-14 09:11:06,497 INFO status has been updated to running
+2026-07-14 09:20:43,739 INFO status has been updated to successful
+
+503da7fe4eb2d3046aa3e73deb167c22.nc:   0%|          | 0.00/2.05M [00:00<?, ?B/s]
+503da7fe4eb2d3046aa3e73deb167c22.nc:  49%|####8     | 1.00M/2.05M [00:03<00:03, 298kB/s]
+503da7fe4eb2d3046aa3e73deb167c22.nc:  97%|#########7| 2.00M/2.05M [00:03<00:00, 634kB/s]
+                                                                                        
+2026-07-14 09:20:50,936 INFO Request ID is 77da7908-fe31-4831-b8d8-926006ec6d82
+2026-07-14 09:20:51,304 INFO status has been updated to accepted
+2026-07-14 09:22:11,392 WARNING Download format not supported for this dataset. Defaulting to as_source.
+2026-07-14 09:22:11,392 INFO status has been updated to running
+2026-07-14 09:27:21,058 WARNING Download format not supported for this dataset. Defaulting to as_source.
+2026-07-14 09:35:27,568 INFO status has been updated to successful
+
+8481a45fc0fbfa71aa03d7779bf22245.nc:   0%|          | 0.00/2.00M [00:00<?, ?B/s]
+8481a45fc0fbfa71aa03d7779bf22245.nc:  50%|####9     | 1.00M/2.00M [00:03<00:03, 301kB/s]
+8481a45fc0fbfa71aa03d7779bf22245.nc: 100%|#########9| 2.00M/2.00M [00:03<00:00, 640kB/s]
+                                                                                        
+
+2026-07-14 09:35:33      ok (2150.9 min)
+2026-07-14 09:35:33  --- climatology: 04_era5_climatology.py
+
+2026-07-14 09:35:37  FAILED at 'climatology' (exit 3228369023) after 0.1 min — rerun this script to resume
+2026-07-14 17:13:23  === full refresh started ===
+2026-07-14 17:13:23  cleared 0 cached WindNinja outputs
+2026-07-14 17:13:53  --- ERA5 30-yr pull: 03_fetch_era5.py --all
+  1991: complete (per-var yearly), skipping
+  1992: complete (per-var yearly), skipping
+  1993: complete (per-var yearly), skipping
+  1994: complete (per-var yearly), skipping
+  1995: complete (per-var yearly), skipping
+  1996: complete (per-var yearly), skipping
+  1997: complete (per-var yearly), skipping
+  1998: complete (per-var yearly), skipping
+  1999: complete (per-var yearly), skipping
+  2000: complete (per-var yearly), skipping
+  2001: complete (per-var yearly), skipping
+  2002: complete (per-var yearly), skipping
+  2003: complete (per-var yearly), skipping
+  2004: complete (per-var yearly), skipping
+  2005: complete (per-var yearly), skipping
+  2006: complete (per-var yearly), skipping
+  2007: complete (per-var yearly), skipping
+  2008: complete (per-var yearly), skipping
+  2009: complete (per-var yearly), skipping
+  2010: complete (per-var yearly), skipping
+  2011: complete (per-var yearly), skipping
+  2012: complete (per-var yearly), skipping
+  2013: complete (per-var yearly), skipping
+  2014: complete (per-var yearly), skipping
+  2015: complete (per-var yearly), skipping
+  2016: complete (per-var yearly), skipping
+  2017: complete (per-var yearly), skipping
+  2018: complete (per-var yearly), skipping
+  2019: complete (per-var yearly), skipping
+  2020: complete (per-var yearly), skipping
+done: 30 year(s), 0.0 min total
+
+2026-07-14 17:13:55      ok (0.0 min)
+2026-07-14 17:14:25  --- climatology: 04_era5_climatology.py
+
+2026-07-14 17:14:29  FAILED at 'climatology' (exit 3228369023) after 0.1 min — rerun this script to resume
+2026-07-14 20:54:00  === full refresh started ===
+2026-07-14 20:54:00  cleared 0 cached WindNinja outputs
+2026-07-14 20:54:30  --- ERA5 30-yr pull: 03_fetch_era5.py --all
+  1991: complete (per-var yearly), skipping
+  1992: complete (per-var yearly), skipping
+  1993: complete (per-var yearly), skipping
+  1994: complete (per-var yearly), skipping
+  1995: complete (per-var yearly), skipping
+  1996: complete (per-var yearly), skipping
+  1997: complete (per-var yearly), skipping
+  1998: complete (per-var yearly), skipping
+  1999: complete (per-var yearly), skipping
+  2000: complete (per-var yearly), skipping
+  2001: complete (per-var yearly), skipping
+  2002: complete (per-var yearly), skipping
+  2003: complete (per-var yearly), skipping
+  2004: complete (per-var yearly), skipping
+  2005: complete (per-var yearly), skipping
+  2006: complete (per-var yearly), skipping
+  2007: complete (per-var yearly), skipping
+  2008: complete (per-var yearly), skipping
+  2009: complete (per-var yearly), skipping
+  2010: complete (per-var yearly), skipping
+  2011: complete (per-var yearly), skipping
+  2012: complete (per-var yearly), skipping
+  2013: complete (per-var yearly), skipping
+  2014: complete (per-var yearly), skipping
+  2015: complete (per-var yearly), skipping
+  2016: complete (per-var yearly), skipping
+  2017: complete (per-var yearly), skipping
+  2018: complete (per-var yearly), skipping
+  2019: complete (per-var yearly), skipping
+  2020: complete (per-var yearly), skipping
+done: 30 year(s), 0.0 min total
+
+2026-07-14 20:54:33      ok (0.0 min)
+2026-07-14 20:55:03  --- climatology: 04_era5_climatology.py
+
+2026-07-14 20:55:06  FAILED at 'climatology' (exit 3228369023) after 0.1 min — rerun this script to resume
+2026-07-15 07:21:49  === full refresh started ===
+2026-07-15 07:21:49  cleared 0 cached WindNinja outputs
+2026-07-15 07:22:19  --- ERA5 30-yr pull: 03_fetch_era5.py --all
+  1991: complete (per-var yearly), skipping
+  1992: complete (per-var yearly), skipping
+  1993: complete (per-var yearly), skipping
+  1994: complete (per-var yearly), skipping
+  1995: complete (per-var yearly), skipping
+  1996: complete (per-var yearly), skipping
+  1997: complete (per-var yearly), skipping
+  1998: complete (per-var yearly), skipping
+  1999: complete (per-var yearly), skipping
+  2000: complete (per-var yearly), skipping
+  2001: complete (per-var yearly), skipping
+  2002: complete (per-var yearly), skipping
+  2003: complete (per-var yearly), skipping
+  2004: complete (per-var yearly), skipping
+  2005: complete (per-var yearly), skipping
+  2006: complete (per-var yearly), skipping
+  2007: complete (per-var yearly), skipping
+  2008: complete (per-var yearly), skipping
+  2009: complete (per-var yearly), skipping
+  2010: complete (per-var yearly), skipping
+  2011: complete (per-var yearly), skipping
+  2012: complete (per-var yearly), skipping
+  2013: complete (per-var yearly), skipping
+  2014: complete (per-var yearly), skipping
+  2015: complete (per-var yearly), skipping
+  2016: complete (per-var yearly), skipping
+  2017: complete (per-var yearly), skipping
+  2018: complete (per-var yearly), skipping
+  2019: complete (per-var yearly), skipping
+  2020: complete (per-var yearly), skipping
+done: 30 year(s), 0.0 min total
+
+2026-07-15 07:22:22      ok (0.0 min)
+2026-07-15 07:22:52  --- climatology: 04_era5_climatology.py
+loaded 30 years (1991-2020)
+16,831,488 finite (hour, gridpoint) samples, gust var 'fg10'
+{
+  "source": "ERA5 reanalysis-era5-single-levels, hourly",
+  "gust_variable": "fg10",
+  "years": [
+    1991,
+    1992,
+    1993,
+    1994,
+    1995,
+    1996,
+    1997,
+    1998,
+    1999,
+    2000,
+    2001,
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020
+  ],
+  "bbox": {
+    "south": -45.89,
+    "west": 168.18,
+    "north": -44.13,
+    "east": 169.96
+  },
+  "n_samples": 16831488,
+  "percentile": 99,
+  "gust_p99_overall_ms": 23.16584587097168,
+  "speed_p99_overall_ms": 7.570529460906982,
+  "sectors": [
+    {
+      "sector": "N",
+      "center_deg": 0,
+      "freq": 0.21700309562648293,
+      "freq_top_decile_gust": 0.2801930903365713,
+      "gust_p99_ms": 24.92829132080078,
+      "speed_p99_ms": 6.216166019439697
+    },
+    {
+      "sector": "NE",
+      "center_deg": 45,
+      "freq": 0.07732257540153313,
+      "freq_top_decile_gust": 0.04220657695392568,
+      "gust_p99_ms": 20.702762603759766,
+      "speed_p99_ms": 7.906347274780273
+    },
+    {
+      "sector": "E",
+      "center_deg": 90,
+      "freq": 0.056748696253117965,
+      "freq_top_decile_gust": 0.00757983542762083,
+      "gust_p99_ms": 16.06318473815918,
+      "speed_p99_ms": 6.496227741241455
+    },
+    {
+      "sector": "SE",
+      "center_deg": 135,
+      "freq": 0.07573418345424957,
+      "freq_top_decile_gust": 0.010262899919793244,
+      "gust_p99_ms": 16.026010513305664,
+      "speed_p99_ms": 4.503929615020752
+    },
+    {
+      "sector": "S",
+      "center_deg": 180,
+      "freq": 0.06844825603060169,
+      "freq_top_decile_gust": 0.014777054926774204,
+      "gust_p99_ms": 16.81601905822754,
+      "speed_p99_ms": 4.903102397918701
+    },
+    {
+      "sector": "SW",
+      "center_deg": 225,
+      "freq": 0.08566604449945245,
+      "freq_top_decile_gust": 0.05674004099456376,
+      "gust_p99_ms": 19.374862670898438,
+      "speed_p99_ms": 8.72335433959961
+    },
+    {
+      "sector": "W",
+      "center_deg": 270,
+      "freq": 0.1335476697009795,
+      "freq_top_decile_gust": 0.167474081335591,
+      "gust_p99_ms": 22.575096130371094,
+      "speed_p99_ms": 8.697718620300293
+    },
+    {
+      "sector": "NW",
+      "center_deg": 315,
+      "freq": 0.2855294790335828,
+      "freq_top_decile_gust": 0.42076642010515997,
+      "gust_p99_ms": 24.576095581054688,
+      "speed_p99_ms": 7.406448841094971
+    }
+  ]
+}
+wrote C:\Users\Jamie\sandbox-fable\Dunedin-Wind\outputs_central\era5_climatology.json
+
+2026-07-15 07:22:55      ok (0.1 min)
+2026-07-15 07:23:25  --- windninja: 05_run_windninja.py
