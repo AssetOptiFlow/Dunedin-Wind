@@ -45,14 +45,11 @@ def complete_year_files():
     return sorted(files)
 
 
-def load():
-    files = complete_year_files()
-    if not files:
-        sys.exit("no complete ERA5 years — run 03_fetch_era5.py first")
-
-    # The CDS delivers "as_source" zips (gust lives in the forecast stream,
-    # u/v in the analysis stream -> two netCDFs per month) even though we
-    # asked for unzipped. Unpack transparently, cache in era5/unpacked/.
+def unpack_paths(files):
+    """The CDS delivers "as_source" zips for multi-stream (multi-variable)
+    requests (gust = forecast stream, u/v = analysis stream -> two netCDFs
+    per month); single-variable deliveries are plain netCDF. Unpack zips
+    transparently, cache in era5/unpacked/."""
     import zipfile
     unpack = C.ERA5_DIR / "unpacked"
     unpack.mkdir(exist_ok=True)
@@ -71,27 +68,52 @@ def load():
                 if not dest.exists():
                     dest.write_bytes(z.read(m))
                 paths.append(dest)
+    return paths
 
-    print(f"loading {len(files)} month files ({len(paths)} netCDF members)...")
-    # Eager per-file load: the whole 30-year domain is ~100 MB, no dask needed.
-    parts = []
-    for p in paths:
-        with xr.open_dataset(p) as d:
-            d = d.drop_vars([v for v in ("expver", "number") if v in d.variables])
-            parts.append(d.load())
-    ds = xr.combine_by_coords(parts, combine_attrs="drop_conflicts")
-    # New CDS netCDF names the time dim 'valid_time'; normalise.
-    if "valid_time" in ds.dims:
-        ds = ds.rename({"valid_time": "time"})
-    return ds
+
+def iter_samples():
+    """Yield per-year flattened (u, v, gust) sample arrays.
+
+    Deliberately never combines all years into one xarray Dataset:
+    combine_by_coords over ~90 datasets crashed natively (exit 0xC06D007F,
+    2026-07-14) on the larger central domain. Per-year merges are small and
+    keep peak memory flat."""
+    files = complete_year_files()
+    if not files:
+        sys.exit("no complete ERA5 years — run 03_fetch_era5.py first")
+    by_year = {}
+    for p in unpack_paths(files):
+        year = int(p.name.split("_")[1])
+        by_year.setdefault(year, []).append(p)
+
+    for year in sorted(by_year):
+        parts = []
+        for p in by_year[year]:
+            with xr.open_dataset(p) as d:
+                d = d.drop_vars([v for v in ("expver", "number")
+                                 if v in d.variables])
+                parts.append(d.load())
+        ds = xr.combine_by_coords(parts, combine_attrs="drop_conflicts")
+        if "valid_time" in ds.dims:
+            ds = ds.rename({"valid_time": "time"})
+        gust_name = "fg10" if "fg10" in ds else "i10fg"
+        yield (year, gust_name, ds["u10"].values.ravel(),
+               ds["v10"].values.ravel(), ds[gust_name].values.ravel())
+        ds.close()
 
 
 def main():
-    ds = load()
-    gust_name = "fg10" if "fg10" in ds else "i10fg"
-    u = ds["u10"].values.ravel()
-    v = ds["v10"].values.ravel()
-    g = ds[gust_name].values.ravel()
+    us, vs, gs = [], [], []
+    gust_name = None
+    years_loaded = []
+    for year, gname, u, v, g in iter_samples():
+        gust_name = gname
+        years_loaded.append(year)
+        us.append(u); vs.append(v); gs.append(g)
+    print(f"loaded {len(years_loaded)} years "
+          f"({years_loaded[0]}-{years_loaded[-1]})")
+    u = np.concatenate(us); v = np.concatenate(vs); g = np.concatenate(gs)
+    del us, vs, gs
     ok = np.isfinite(u) & np.isfinite(v) & np.isfinite(g)
     u, v, g = u[ok], v[ok], g[ok]
     n = g.size

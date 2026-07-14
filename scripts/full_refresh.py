@@ -52,6 +52,10 @@ def main():
     log(f"cleared {cleared} cached WindNinja outputs")
 
     for name, args in STEPS:
+        # Settle delay: the climatology step has twice crashed natively when
+        # started seconds after the final CDS download (file-flush race,
+        # 2026-07-12 and 2026-07-14). Cheap insurance between every step.
+        time.sleep(30)
         log(f"--- {name}: {' '.join(args)}")
         t0 = time.time()
         proc = subprocess.run([PY, str(SCRIPTS / args[0]), *args[1:]],
