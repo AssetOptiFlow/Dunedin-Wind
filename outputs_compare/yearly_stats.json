@@ -1,0 +1,377 @@
+{
+ "percentile": 99,
+ "method": "per-year ERA5 sector p99 x climatological WindNinja multipliers (script-06 formula, year-local weights)",
+ "clip": "Aurora service area + 10 km",
+ "domains": {
+  "dunedin": {
+   "title": "Dunedin",
+   "years": {
+    "1991": {
+     "clip_mean_ms": 23.309,
+     "clip_max_ms": 31.85,
+     "clip_cells": 8835
+    },
+    "1992": {
+     "clip_mean_ms": 22.942,
+     "clip_max_ms": 31.15,
+     "clip_cells": 8835
+    },
+    "1993": {
+     "clip_mean_ms": 22.135,
+     "clip_max_ms": 30.15,
+     "clip_cells": 8835
+    },
+    "1994": {
+     "clip_mean_ms": 23.92,
+     "clip_max_ms": 32.7,
+     "clip_cells": 8835
+    },
+    "1995": {
+     "clip_mean_ms": 21.585,
+     "clip_max_ms": 29.37,
+     "clip_cells": 8835
+    },
+    "1996": {
+     "clip_mean_ms": 20.972,
+     "clip_max_ms": 28.26,
+     "clip_cells": 8835
+    },
+    "1997": {
+     "clip_mean_ms": 22.976,
+     "clip_max_ms": 31.42,
+     "clip_cells": 8835
+    },
+    "1998": {
+     "clip_mean_ms": 23.155,
+     "clip_max_ms": 31.63,
+     "clip_cells": 8835
+    },
+    "1999": {
+     "clip_mean_ms": 21.081,
+     "clip_max_ms": 28.38,
+     "clip_cells": 8835
+    },
+    "2000": {
+     "clip_mean_ms": 23.394,
+     "clip_max_ms": 31.55,
+     "clip_cells": 8835
+    },
+    "2001": {
+     "clip_mean_ms": 22.415,
+     "clip_max_ms": 30.57,
+     "clip_cells": 8835
+    },
+    "2002": {
+     "clip_mean_ms": 23.851,
+     "clip_max_ms": 32.51,
+     "clip_cells": 8835
+    },
+    "2003": {
+     "clip_mean_ms": 21.46,
+     "clip_max_ms": 29.31,
+     "clip_cells": 8835
+    },
+    "2004": {
+     "clip_mean_ms": 24.932,
+     "clip_max_ms": 33.94,
+     "clip_cells": 8835
+    },
+    "2005": {
+     "clip_mean_ms": 21.203,
+     "clip_max_ms": 28.72,
+     "clip_cells": 8835
+    },
+    "2006": {
+     "clip_mean_ms": 22.817,
+     "clip_max_ms": 30.98,
+     "clip_cells": 8835
+    },
+    "2007": {
+     "clip_mean_ms": 24.674,
+     "clip_max_ms": 33.74,
+     "clip_cells": 8835
+    },
+    "2008": {
+     "clip_mean_ms": 21.971,
+     "clip_max_ms": 29.74,
+     "clip_cells": 8835
+    },
+    "2009": {
+     "clip_mean_ms": 23.092,
+     "clip_max_ms": 31.24,
+     "clip_cells": 8835
+    },
+    "2010": {
+     "clip_mean_ms": 22.783,
+     "clip_max_ms": 30.92,
+     "clip_cells": 8835
+    },
+    "2011": {
+     "clip_mean_ms": 23.216,
+     "clip_max_ms": 31.51,
+     "clip_cells": 8835
+    },
+    "2012": {
+     "clip_mean_ms": 23.606,
+     "clip_max_ms": 32.1,
+     "clip_cells": 8835
+    },
+    "2013": {
+     "clip_mean_ms": 20.013,
+     "clip_max_ms": 26.94,
+     "clip_cells": 8835
+    },
+    "2014": {
+     "clip_mean_ms": 24.55,
+     "clip_max_ms": 33.4,
+     "clip_cells": 8835
+    },
+    "2015": {
+     "clip_mean_ms": 25.061,
+     "clip_max_ms": 33.9,
+     "clip_cells": 8835
+    },
+    "2016": {
+     "clip_mean_ms": 23.059,
+     "clip_max_ms": 31.16,
+     "clip_cells": 8835
+    },
+    "2017": {
+     "clip_mean_ms": 23.048,
+     "clip_max_ms": 30.96,
+     "clip_cells": 8835
+    },
+    "2018": {
+     "clip_mean_ms": 21.236,
+     "clip_max_ms": 28.38,
+     "clip_cells": 8835
+    },
+    "2019": {
+     "clip_mean_ms": 23.638,
+     "clip_max_ms": 32.14,
+     "clip_cells": 8835
+    },
+    "2020": {
+     "clip_mean_ms": 23.858,
+     "clip_max_ms": 32.42,
+     "clip_cells": 8835
+    },
+    "2021": {
+     "clip_mean_ms": 21.657,
+     "clip_max_ms": 29.23,
+     "clip_cells": 8835,
+     "n_samples": 70080
+    },
+    "2022": {
+     "clip_mean_ms": 22.981,
+     "clip_max_ms": 31.23,
+     "clip_cells": 8835,
+     "n_samples": 70080
+    },
+    "2023": {
+     "clip_mean_ms": 23.644,
+     "clip_max_ms": 32.03,
+     "clip_cells": 8835,
+     "n_samples": 70080
+    },
+    "2024": {
+     "clip_mean_ms": 23.063,
+     "clip_max_ms": 31.23,
+     "clip_cells": 8835,
+     "n_samples": 70272
+    },
+    "2025": {
+     "clip_mean_ms": 22.954,
+     "clip_max_ms": 31.09,
+     "clip_cells": 8835,
+     "n_samples": 70080
+    }
+   }
+  },
+  "central": {
+   "title": "Central Otago/Queenstown",
+   "years": {
+    "1991": {
+     "clip_mean_ms": 22.096,
+     "clip_max_ms": 40.26,
+     "clip_cells": 48867
+    },
+    "1992": {
+     "clip_mean_ms": 21.155,
+     "clip_max_ms": 37.92,
+     "clip_cells": 48867
+    },
+    "1993": {
+     "clip_mean_ms": 22.117,
+     "clip_max_ms": 40.09,
+     "clip_cells": 48867
+    },
+    "1994": {
+     "clip_mean_ms": 22.822,
+     "clip_max_ms": 42.39,
+     "clip_cells": 48867
+    },
+    "1995": {
+     "clip_mean_ms": 22.991,
+     "clip_max_ms": 43.16,
+     "clip_cells": 48867
+    },
+    "1996": {
+     "clip_mean_ms": 21.43,
+     "clip_max_ms": 39.68,
+     "clip_cells": 48867
+    },
+    "1997": {
+     "clip_mean_ms": 23.721,
+     "clip_max_ms": 45.23,
+     "clip_cells": 48867
+    },
+    "1998": {
+     "clip_mean_ms": 24.4,
+     "clip_max_ms": 45.97,
+     "clip_cells": 48867
+    },
+    "1999": {
+     "clip_mean_ms": 23.431,
+     "clip_max_ms": 43.88,
+     "clip_cells": 48867
+    },
+    "2000": {
+     "clip_mean_ms": 22.356,
+     "clip_max_ms": 41.21,
+     "clip_cells": 48867
+    },
+    "2001": {
+     "clip_mean_ms": 21.809,
+     "clip_max_ms": 39.53,
+     "clip_cells": 48867
+    },
+    "2002": {
+     "clip_mean_ms": 22.613,
+     "clip_max_ms": 42.26,
+     "clip_cells": 48867
+    },
+    "2003": {
+     "clip_mean_ms": 23.22,
+     "clip_max_ms": 43.62,
+     "clip_cells": 48867
+    },
+    "2004": {
+     "clip_mean_ms": 22.972,
+     "clip_max_ms": 41.44,
+     "clip_cells": 48867
+    },
+    "2005": {
+     "clip_mean_ms": 21.2,
+     "clip_max_ms": 39.27,
+     "clip_cells": 48867
+    },
+    "2006": {
+     "clip_mean_ms": 23.267,
+     "clip_max_ms": 43.67,
+     "clip_cells": 48867
+    },
+    "2007": {
+     "clip_mean_ms": 22.517,
+     "clip_max_ms": 41.37,
+     "clip_cells": 48867
+    },
+    "2008": {
+     "clip_mean_ms": 21.857,
+     "clip_max_ms": 39.69,
+     "clip_cells": 48867
+    },
+    "2009": {
+     "clip_mean_ms": 22.881,
+     "clip_max_ms": 42.43,
+     "clip_cells": 48867
+    },
+    "2010": {
+     "clip_mean_ms": 22.966,
+     "clip_max_ms": 41.93,
+     "clip_cells": 48867
+    },
+    "2011": {
+     "clip_mean_ms": 22.393,
+     "clip_max_ms": 40.36,
+     "clip_cells": 48867
+    },
+    "2012": {
+     "clip_mean_ms": 22.313,
+     "clip_max_ms": 41.22,
+     "clip_cells": 48867
+    },
+    "2013": {
+     "clip_mean_ms": 23.843,
+     "clip_max_ms": 45.99,
+     "clip_cells": 48867
+    },
+    "2014": {
+     "clip_mean_ms": 23.667,
+     "clip_max_ms": 43.27,
+     "clip_cells": 48867
+    },
+    "2015": {
+     "clip_mean_ms": 23.643,
+     "clip_max_ms": 43.41,
+     "clip_cells": 48867
+    },
+    "2016": {
+     "clip_mean_ms": 22.861,
+     "clip_max_ms": 42.29,
+     "clip_cells": 48867
+    },
+    "2017": {
+     "clip_mean_ms": 21.644,
+     "clip_max_ms": 39.55,
+     "clip_cells": 48867
+    },
+    "2018": {
+     "clip_mean_ms": 21.392,
+     "clip_max_ms": 40.38,
+     "clip_cells": 48867
+    },
+    "2019": {
+     "clip_mean_ms": 23.1,
+     "clip_max_ms": 43.18,
+     "clip_cells": 48867
+    },
+    "2020": {
+     "clip_mean_ms": 22.743,
+     "clip_max_ms": 42.04,
+     "clip_cells": 48867
+    },
+    "2021": {
+     "clip_mean_ms": 23.157,
+     "clip_max_ms": 44.15,
+     "clip_cells": 48867,
+     "n_samples": 560640
+    },
+    "2022": {
+     "clip_mean_ms": 21.722,
+     "clip_max_ms": 39.22,
+     "clip_cells": 48867,
+     "n_samples": 560640
+    },
+    "2023": {
+     "clip_mean_ms": 23.677,
+     "clip_max_ms": 43.66,
+     "clip_cells": 48867,
+     "n_samples": 560640
+    },
+    "2024": {
+     "clip_mean_ms": 22.464,
+     "clip_max_ms": 42.44,
+     "clip_cells": 48867,
+     "n_samples": 562176
+    },
+    "2025": {
+     "clip_mean_ms": 24.467,
+     "clip_max_ms": 46.75,
+     "clip_cells": 48867,
+     "n_samples": 560640
+    }
+   }
+  }
+ }
+}

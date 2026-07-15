@@ -1,5 +1,62 @@
 # BUILD_LOG
 
+## 2026-07-16 — Session 9: ERA5 2021–2025 + split-screen year-comparison map
+
+**Goal.** Pull ERA5 up to the most recent complete year (Jamie's ask) and
+build a separate webmap comparing gusts between user-defined periods
+(e.g. 2025 vs 2024), split-screen — WITHOUT changing any existing map.
+
+**Decisions.**
+- `config.ERA5_YEARS` left at 1991–2020: the headline climatology, zones and
+  all existing maps are untouched. New years fetched via `03 --year` only.
+- Partial 2026 deliberately excluded — a half year against full years would
+  be biased by the missing seasons.
+- Per-year surfaces (new `scripts/14_yearly_gust.py`): identical formula to
+  script 06 but with year-local inputs — that year's per-sector p99 gust,
+  weighted by that year's top-decile-gust sector frequencies, distributed by
+  the existing climatological WindNinja multipliers. No new WindNinja runs;
+  every yearly map is method-identical to the headline product.
+- Comparison map (new `scripts/15_compare_map.py` → webmap_compare/, 6.1 MB
+  single file): hand-rolled swipe divider (clip-path on two Leaflet panes, no
+  plugin); each side has from/to year selects + presets. Years are embedded
+  as grayscale "data PNGs" (byte = gust on one fixed scale, alpha 0/255) and
+  the browser averages the selected span client-side, so any period works
+  offline from one file. Readout panel: per-side service-area mean (area-
+  weighted across domains) + signed B−A difference; annual line chart with
+  the two periods shaded.
+- Colour scale FIXED across all 70 year-surfaces (pooled 1–99.5 pct:
+  15.6–33.0 m/s = 56–119 km/h); per-side rescaling would fake differences.
+
+**Provenance.**
+- ERA5 hourly fg10/u10/v10, 2021–2025, both domains, CDS
+  reanalysis-era5-single-levels, retrieved 2026-07-15/16, Copernicus licence.
+  Per-variable yearly requests (30 total); observed 42–69 min each, ~9 h
+  wall-clock for both domains in parallel.
+- 2025 clip-area mean p99 gust: Central 24.5 m/s — the highest in the
+  35-year record (previous max 24.4, 1998); Dunedin 23.0 m/s (2024: 23.1).
+  Combined service-area 2025 = 87.2 km/h vs 2024 = 81.2 km/h (+7.4%).
+
+**Residuals & caveats.**
+- Interannual variation comes from ERA5 alone; the terrain response is
+  climatological (multipliers not re-solved per year). A year with an
+  unusual directional mix is only captured through the 8-sector weights.
+- Single-year per-sector p99s rest on ~1 year × ~8–64 grid points of hours;
+  rare-sector values in a single year carry sampling noise.
+- A multi-year side is the MEAN OF ANNUAL p99 SURFACES, not the p99 of the
+  pooled hours — so the map's "1991–2020" preset is close to, but not
+  identical to, the headline gust99 surface. Stated in the map legend.
+- Straight eastern edge on the Central overlay is the domain bbox limit
+  (169.96°E), same as the combined map.
+
+**Checkpoints.** None requested this session. Everything is uncommitted and
+unpublished pending Jamie's review (GitHub Pages would serve it at
+/webmap_compare/ once pushed).
+
+**Next.** Jamie reviews webmap_compare/index.html (open locally; data is
+embedded). Decide: commit + push to Pages; whether to roll the headline
+climatology to the 1996–2025 normal (all data now on disk, would change the
+existing maps); rerun `14` then `15` each year to append the newest year.
+
 ## 2026-07-15 — Session 8: combined two-domain map with aligned zones
 
 **Goal.** Single webmap covering both domains with one 5-zone scheme
