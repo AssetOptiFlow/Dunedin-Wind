@@ -1,32 +1,28 @@
-"""Build the year-comparison webmap (webmap_compare/index.html).
+"""Build the station-based year-comparison webmap (webmap_compare/index.html).
 
-Shows ONE overlay: the per-cell RELATIVE DIFFERENCE in p99 gust between two
-user-chosen periods, (B - A) / A, on a diverging blue-0-red scale (red =
-windier in B). Each period is the mean of its years' annual surfaces from
-14_yearly_gust.py. Spatial structure in the difference reflects how each
-period's directional mix loads the (climatological) WindNinja terrain
-response — interannual signal is ERA5's.
+Shows the 7 reference stations as markers coloured by the relative change in
+MEAN DAILY MAX GUST between two user-chosen periods (B vs A, diverging
+blue-0-red, fixed range). Clicking a station opens a full A-vs-B comparison:
+highest gust (+date), mean daily max, p99, mean, days >= 90/120 km/h, and an
+overlaid direction rose of strong-gust hours. A service-area annual chart +
+readout give whole-network context.
 
-Years are embedded as grayscale "data PNGs" (byte = gust on one fixed
-absolute scale, alpha = strictly 0/255 validity); the browser averages the
-selected spans and computes the difference client-side, so any period works
-offline from one self-contained file. The diverging display range is FIXED
-(worst single-year-pair 99.5th-percentile |relative difference|, rounded up
-to 5%) so colours mean the same thing across selections.
+All station values are ERA5 model estimates at the nearest 0.25-deg grid
+cell (from 16_station_yearly_stats.py) — NOT station observations; the page
+says so. Periods aggregate client-side (max over years for records, means
+otherwise), so any span works offline from one self-contained file.
 
-Everything is clipped to the Aurora service area + 10 km, like the combined
-map. Standalone read-only build: never touches the other webmaps. Rerun
-after 14 whenever new years land.
+Standalone read-only build; rerun after 14 (chart stats) + 16 (station
+stats) whenever new years land.
 """
 import base64
 import io
 import json
 import sys
+from itertools import combinations
 from pathlib import Path
 
 import numpy as np
-import rasterio
-from rasterio.features import geometry_mask
 import matplotlib
 matplotlib.use("Agg")
 from matplotlib import colormaps
@@ -38,37 +34,7 @@ import config as C
 REPO = C.REPO
 IN = REPO / "outputs_compare"
 WEB = REPO / "webmap_compare"
-DOMAIN_KEYS = ["dunedin", "central"]
 DIV_CMAP = "RdBu_r"   # red = windier in B, blue = calmer, white ~ no change
-CLIP_BUFFER_M = 10_000
-
-
-def service_clip_wgs():
-    import geopandas as gpd
-    g = gpd.read_file(C.SHARED_DATA / "substations" /
-                      "aurora_zone_substations.geojson")
-    g = g[g.geometry.geom_type == "Polygon"].to_crs(C.CRS_WORKING)
-    clip = g.union_all().buffer(CLIP_BUFFER_M)
-    return gpd.GeoSeries([clip], crs=C.CRS_WORKING).to_crs(C.CRS_WGS84).iloc[0]
-
-
-def read_surface(path):
-    with rasterio.open(path) as src:
-        a = src.read(1).astype("float64")
-        if src.nodata is not None:
-            a[a == src.nodata] = np.nan
-        return a, src.bounds, src.transform
-
-
-def data_png(a, valid, vmin, vmax):
-    """Grayscale+alpha PNG: byte = scaled value, alpha strictly 0/255 (canvas
-    premultiplies alpha, so partial alpha would corrupt the data channel)."""
-    byte = np.clip(np.nan_to_num((a - vmin) / (vmax - vmin)), 0, 1)
-    byte = np.round(byte * 255).astype("uint8")
-    la = np.dstack([byte, np.where(valid, 255, 0).astype("uint8")])
-    buf = io.BytesIO()
-    Image.fromarray(la, mode="LA").save(buf, format="PNG", optimize=True)
-    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
 def ramp_uri(cmap):
@@ -79,81 +45,41 @@ def ramp_uri(cmap):
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
-def diff_display_range(per_dom_arrays):
-    """Fixed diverging range: max over all single-year pairs of the 99.5th
-    percentile |(y_j - y_i) / y_i|, cell-subsampled, rounded UP to 5%."""
+def marker_range(stations):
+    """Fixed diverging range for marker colour: worst single-year-pair
+    relative difference in mean-daily-max across stations, rounded UP to 5%."""
     worst = 0.0
-    for arrs in per_dom_arrays.values():
-        sub = [a[::7] for a in arrs]  # every 7th valid cell is plenty
-        for i in range(len(sub)):
-            for j in range(len(sub)):
-                if i == j:
-                    continue
-                d = np.percentile(np.abs((sub[j] - sub[i]) / sub[i]), 99.5)
-                worst = max(worst, float(d))
-    return np.ceil(worst * 20) / 20
+    for st in stations:
+        mdm = [y["mdm_ms"] for y in st["years"].values()]
+        for a, b in combinations(mdm, 2):
+            worst = max(worst, abs(b - a) / a)
+    return float(np.ceil(worst * 20) / 20)
 
 
 def main():
-    stats = json.loads((IN / "yearly_stats.json").read_text())
-    clip_wgs = service_clip_wgs()
-
-    # Pass 1: load every year x domain; pooled fixed ABSOLUTE byte scale.
-    surfaces, valids, pool = {}, {}, []
-    for dom in DOMAIN_KEYS:
-        years = sorted(stats["domains"][dom]["years"])
-        for i, y in enumerate(years):
-            a, bounds, transform = read_surface(
-                IN / dom / f"gust99_{y}_500m_wgs84.tif")
-            if i == 0:
-                inside = ~geometry_mask([clip_wgs], out_shape=a.shape,
-                                        transform=transform, invert=False,
-                                        all_touched=True)
-            valid = np.isfinite(a) & inside
-            surfaces[dom, y] = (a, bounds)
-            valids[dom] = valid
-            pool.append(a[valid])
-    pool = np.concatenate(pool)
-    vmin = float(np.percentile(pool, 1))
-    vmax = float(np.percentile(pool, 99.5))
-
-    per_dom = {dom: [surfaces[dom, y][0][valids[dom]]
-                     for y in sorted(stats["domains"][dom]["years"])]
-               for dom in DOMAIN_KEYS}
-    drange = diff_display_range(per_dom)
-    print(f"absolute byte scale {vmin:.1f}-{vmax:.1f} m/s, "
-          f"{len(surfaces)} year-surfaces; diff display range ±{drange*100:.0f}%")
-
-    imgs, bounds_js, years_js = {}, {}, {}
-    for dom in DOMAIN_KEYS:
-        years = sorted(stats["domains"][dom]["years"])
-        years_js[dom] = [int(y) for y in years]
-        imgs[dom] = {}
-        for y in years:
-            a, b = surfaces[dom, y]
-            imgs[dom][y] = data_png(a, valids[dom], vmin, vmax)
-        bounds_js[dom] = [[b.bottom, b.left], [b.top, b.right]]
-
-    div_lut = (colormaps[DIV_CMAP](np.linspace(0, 1, 256))[:, :3] * 255) \
-        .astype(int).tolist()
+    yearly = json.loads((IN / "yearly_stats.json").read_text())
+    station = json.loads((IN / "station_yearly_stats.json").read_text())
 
     side_stats = {dom: {str(y): {"mean_ms": v["clip_mean_ms"],
                                  "cells": v["clip_cells"]}
-                        for y, v in stats["domains"][dom]["years"].items()}
-                  for dom in DOMAIN_KEYS}
+                        for y, v in yearly["domains"][dom]["years"].items()}
+                  for dom in yearly["domains"]}
+
+    drange = marker_range(station["stations"])
+    div_lut = (colormaps[DIV_CMAP](np.linspace(0, 1, 256))[:, :3] * 255) \
+        .astype(int).tolist()
+    print(f"{len(station['stations'])} stations; "
+          f"marker range ±{drange*100:.0f}% (mean daily max)")
 
     vendor = REPO / "webmap" / "vendor"
     html = TEMPLATE
     for k, v in {
         "@LEAFLET_CSS@": (vendor / "leaflet.css").read_text(encoding="utf-8"),
         "@LEAFLET_JS@": (vendor / "leaflet.js").read_text(encoding="utf-8"),
-        "@IMGS@": json.dumps(imgs),
-        "@BOUNDS@": json.dumps(bounds_js),
-        "@YEARS@": json.dumps(years_js),
+        "@STATIONS@": json.dumps(station["stations"]),
+        "@SECTORS@": json.dumps(station["sectors"]),
         "@STATS@": json.dumps(side_stats),
         "@DIV_LUT@": json.dumps(div_lut),
-        "@VMIN_MS@": f"{vmin:.4f}",
-        "@VMAX_MS@": f"{vmax:.4f}",
         "@DRANGE@": f"{drange:.2f}",
         "@DRANGE_PCT@": f"{drange*100:.0f}",
         "@DIV_RAMP_URI@": ramp_uri(DIV_CMAP),
@@ -186,7 +112,6 @@ TEMPLATE = """<!DOCTYPE html>
   .panel .presets button:hover { background: #f0efec; }
   .sideA { border-top: 3px solid #2a78d6; }
   .sideB { border-top: 3px solid #eb6834; }
-  .readout { min-width: 300px; }
   .readout .big { font-size: 15px; font-weight: 600; }
   .readout .muted, .legendbox .muted { color: #52514e; }
   .readout table { border-collapse: collapse; margin: 3px 0; }
@@ -200,6 +125,19 @@ TEMPLATE = """<!DOCTYPE html>
   #tip { position: absolute; pointer-events: none; background: #0b0b0b;
     color: #fff; padding: 3px 7px; border-radius: 4px; font-size: 11px;
     display: none; z-index: 1000; white-space: nowrap; }
+  .stpop { font: 12px/1.5 system-ui, sans-serif; }
+  .stpop h3 { margin: 0 0 1px; font-size: 13px; }
+  .stpop .sub { color: #52514e; margin-bottom: 5px; }
+  .stpop table { border-collapse: collapse; width: 100%; }
+  .stpop th, .stpop td { text-align: right; padding: 1px 4px 1px 10px;
+    font-weight: normal; white-space: nowrap; }
+  .stpop th:first-child, .stpop td:first-child { text-align: left;
+    padding-left: 0; }
+  .stpop thead th { color: #52514e; border-bottom: 1px solid #e1e0d9; }
+  .stpop td.delta { font-weight: 600; }
+  .stpop .date { color: #52514e; font-size: 10px; }
+  .stpop .rosecap { color: #52514e; margin-top: 4px; }
+  .leaflet-popup-content { margin: 12px 14px; }
 </style>
 </head>
 <body>
@@ -208,11 +146,11 @@ TEMPLATE = """<!DOCTYPE html>
 <script>@LEAFLET_JS@</script>
 <script>
 'use strict';
-const IMGS = @IMGS@, BOUNDS = @BOUNDS@, YEARS = @YEARS@, STATS = @STATS@,
-      DIV_LUT = @DIV_LUT@, KMH = 3.6,
-      VMIN = @VMIN_MS@, VMAX = @VMAX_MS@, DRANGE = @DRANGE@;
-const DOMS = Object.keys(YEARS);
-const ALL_YEARS = [...new Set(DOMS.flatMap(d => YEARS[d]))].sort((a,b) => a-b);
+const STATIONS = @STATIONS@, SECTORS = @SECTORS@, STATS = @STATS@,
+      DIV_LUT = @DIV_LUT@, DRANGE = @DRANGE@, KMH = 3.6;
+const DOMS = Object.keys(STATS);
+const ALL_YEARS = [...new Set(DOMS.flatMap(d => Object.keys(STATS[d])))]
+  .map(Number).sort((a, b) => a - b);
 const Y0 = ALL_YEARS[0], Y1 = ALL_YEARS[ALL_YEARS.length - 1];
 const SIDE_COLOR = {A: '#2a78d6', B: '#eb6834'};
 
@@ -222,86 +160,134 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 17, attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// --- data decoding & period averaging ---------------------------------------
-const cache = new Map();
-async function decode(dom, year) {
-  const key = dom + year;
-  if (cache.has(key)) return cache.get(key);
-  const img = new Image();
-  img.src = IMGS[dom][year];
-  await img.decode();
-  const c = document.createElement('canvas');
-  c.width = img.width; c.height = img.height;
-  const ctx = c.getContext('2d', {willReadFrequently: true});
-  ctx.drawImage(img, 0, 0);
-  const d = ctx.getImageData(0, 0, c.width, c.height);
-  cache.set(key, d);
-  return d;
-}
-async function periodMean(dom, years) {  // mean byte per cell + validity
-  const first = await decode(dom, years[0]);
-  const n = first.width * first.height;
-  const sum = new Float64Array(n);
-  for (const y of years) {
-    const d = (await decode(dom, y)).data;
-    for (let i = 0; i < n; i++) sum[i] += d[i * 4];
-  }
-  for (let i = 0; i < n; i++) sum[i] /= years.length;
-  return {w: first.width, h: first.height, avg: sum, alpha: first.data};
-}
-const toMs = byte => VMIN + byte / 255 * (VMAX - VMIN);
-
-// --- periods ------------------------------------------------------------------
+// --- periods -------------------------------------------------------------------
 const sides = {
   A: {from: Y0, to: Math.min(2020, Y1)},
   B: {from: Y1, to: Y1},
 };
-function sideYears(s, dom) {
-  return YEARS[dom].filter(y => y >= s.from && y <= s.to);
+function sideYears(s, st) {
+  return Object.keys(st.years).map(Number)
+    .filter(y => y >= s.from && y <= s.to).sort((a, b) => a - b);
 }
-
-// --- difference overlay ---------------------------------------------------------
-const overlays = {};
-let renderSeq = 0;
-async function renderDiff() {
-  const seq = ++renderSeq;
-  for (const dom of DOMS) {
-    const ya = sideYears(sides.A, dom), yb = sideYears(sides.B, dom);
-    if (!ya.length || !yb.length) continue;
-    const [a, b] = await Promise.all([periodMean(dom, ya), periodMean(dom, yb)]);
-    if (seq !== renderSeq) return;            // superseded by a newer selection
-    const n = a.w * a.h, out = new ImageData(a.w, a.h), o = out.data;
-    for (let i = 0; i < n; i++) {
-      if (a.alpha[i * 4 + 3] === 0) continue;
-      const rel = (toMs(b.avg[i]) - toMs(a.avg[i])) / toMs(a.avg[i]);
-      const t = Math.max(-1, Math.min(1, rel / DRANGE));
-      const c = DIV_LUT[Math.round((t + 1) / 2 * 255)];
-      o[i * 4] = c[0]; o[i * 4 + 1] = c[1]; o[i * 4 + 2] = c[2];
-      o[i * 4 + 3] = 200;
-    }
-    const cv = document.createElement('canvas');
-    cv.width = a.w; cv.height = a.h;
-    cv.getContext('2d').putImageData(out, 0, 0);
-    const url = cv.toDataURL();
-    if (overlays[dom]) overlays[dom].setUrl(url);
-    else overlays[dom] = L.imageOverlay(url, BOUNDS[dom], {opacity: 1}).addTo(map);
-  }
-  updateReadout(); updateBands();
-}
-
 function periodLabel(s) {
   return s.from === s.to ? String(s.from) : s.from + '–' + s.to;
 }
-function combinedMean(s) {  // area-weighted across domains, m/s
-  let num = 0, den = 0, perDom = {};
-  for (const dom of DOMS) {
-    const ys = sideYears(s, dom);
-    if (!ys.length) continue;
-    const m = ys.reduce((t, y) => t + STATS[dom][y].mean_ms, 0) / ys.length;
-    const cells = STATS[dom][ys[0]].cells;
-    perDom[dom] = m; num += m * cells; den += cells;
+
+// --- station aggregation ---------------------------------------------------------
+const mean = a => a.reduce((t, v) => t + v, 0) / a.length;
+function agg(st, side) {
+  const ys = sideYears(sides[side], st);
+  if (!ys.length) return null;
+  const Y = ys.map(y => st.years[y]);
+  const iMax = Y.reduce((best, y, i) => y.max_ms > Y[best].max_ms ? i : best, 0);
+  return {
+    years: ys,
+    max_ms: Y[iMax].max_ms, max_date: Y[iMax].max_date,
+    mdm_ms: mean(Y.map(y => y.mdm_ms)),
+    p99_ms: mean(Y.map(y => y.p99_ms)),
+    mean_ms: mean(Y.map(y => y.mean_ms)),
+    d90: mean(Y.map(y => y.d90)),
+    d120: mean(Y.map(y => y.d120)),
+    rose: SECTORS.map((_, i) => mean(Y.map(y => y.rose[i]))),
+  };
+}
+
+// --- rose SVG (A = blue outline, B = orange fill) --------------------------------
+function wedge(cx, cy, r, centreDeg) {
+  const a0 = (centreDeg - 20) * Math.PI / 180, a1 = (centreDeg + 20) * Math.PI / 180;
+  const x = a => (cx + r * Math.sin(a)).toFixed(1),
+        y = a => (cy - r * Math.cos(a)).toFixed(1);
+  return `M${cx} ${cy} L${x(a0)} ${y(a0)} A${r} ${r} 0 0 1 ${x(a1)} ${y(a1)} Z`;
+}
+function roseSvg(ra, rb) {
+  const S = 118, cx = S / 2, cy = S / 2, R = S / 2 - 13;
+  const fmax = Math.max(...ra, ...rb, 0.01);
+  let out = `<svg width="${S}" height="${S}">`;
+  out += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#e1e0d9"/>`;
+  [['N', cx, 9], ['S', cx, S - 2]].forEach(([t, x, y]) =>
+    out += `<text x="${x}" y="${y}" text-anchor="middle" font-size="9"
+      fill="#898781">${t}</text>`);
+  [['W', 4, cy + 3], ['E', S - 4, cy + 3]].forEach(([t, x, y]) =>
+    out += `<text x="${x}" y="${y}" text-anchor="middle" font-size="9"
+      fill="#898781">${t}</text>`);
+  rb.forEach((f, i) => { if (f > 0) out += `<path
+    d="${wedge(cx, cy, R * f / fmax, i * 45)}" fill="${SIDE_COLOR.B}"
+    opacity="0.45"/>`; });
+  ra.forEach((f, i) => { if (f > 0) out += `<path
+    d="${wedge(cx, cy, R * f / fmax, i * 45)}" fill="none"
+    stroke="${SIDE_COLOR.A}" stroke-width="1.8"/>`; });
+  return out + '</svg>';
+}
+
+// --- markers + popups --------------------------------------------------------------
+const kmh = (ms, dp = 0) => (ms * KMH).toFixed(dp);
+function popupHtml(st) {
+  const a = agg(st, 'A'), b = agg(st, 'B');
+  if (!a || !b) return `<div class="stpop"><h3>${st.name}</h3>no data in range</div>`;
+  const dmy = iso => { const [y, m, d] = iso.split('-');
+    return `${+d} ${'JanFebMarAprMayJunJulAugSepOctNovDec'.substr((m-1)*3, 3)} ${y}`; };
+  const sgn = v => (v >= 0 ? '+' : '') + v;
+  const rows = [
+    ['Highest gust',
+     `${kmh(a.max_ms)} <span class="date">${dmy(a.max_date)}</span>`,
+     `${kmh(b.max_ms)} <span class="date">${dmy(b.max_date)}</span>`,
+     sgn(kmh(b.max_ms - a.max_ms)) + ' km/h'],
+    ['Mean daily max', kmh(a.mdm_ms, 1), kmh(b.mdm_ms, 1),
+     sgn(((b.mdm_ms / a.mdm_ms - 1) * 100).toFixed(1)) + '%'],
+    ['p99 hourly gust', kmh(a.p99_ms, 1), kmh(b.p99_ms, 1),
+     sgn(kmh(b.p99_ms - a.p99_ms, 1)) + ' km/h'],
+    ['Mean hourly gust', kmh(a.mean_ms, 1), kmh(b.mean_ms, 1),
+     sgn(kmh(b.mean_ms - a.mean_ms, 1)) + ' km/h'],
+    ['Days ≥ 90 km/h /yr', a.d90.toFixed(1), b.d90.toFixed(1),
+     sgn((b.d90 - a.d90).toFixed(1))],
+    ['Days ≥ 120 km/h /yr', a.d120.toFixed(1), b.d120.toFixed(1),
+     sgn((b.d120 - a.d120).toFixed(1))],
+  ].map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>
+     <td class="delta">${r[3]}</td></tr>`).join('');
+  return `<div class="stpop">
+    <h3>${st.name}</h3>
+    <div class="sub">${st.domain} · ERA5 cell (${st.grid_lat.toFixed(2)},
+      ${st.grid_lon.toFixed(2)}) — model values, not observations</div>
+    <table><thead><tr><th></th>
+      <th><span class="keydot" style="background:${SIDE_COLOR.A}"></span>A ·
+        ${periodLabel(sides.A)}</th>
+      <th><span class="keydot" style="background:${SIDE_COLOR.B}"></span>B ·
+        ${periodLabel(sides.B)}</th><th>Δ (B−A)</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+      ${roseSvg(a.rose, b.rose)}
+      <div class="rosecap">direction of strong-gust hours
+        (≥ ${kmh(st.strong_thr_ms)} km/h, this station's all-years p90).<br>
+        <span style="color:${SIDE_COLOR.A}">— A outline</span>,
+        <span style="color:${SIDE_COLOR.B}">■ B fill</span>.
+        Units: km/h${a.years.length > 1 || b.years.length > 1
+          ? '; multi-year periods: records = max over years, others = annual means'
+          : ''}.</div></div></div>`;
+}
+
+function markerColor(st) {
+  const a = agg(st, 'A'), b = agg(st, 'B');
+  if (!a || !b) return '#898781';
+  const t = Math.max(-1, Math.min(1, (b.mdm_ms / a.mdm_ms - 1) / DRANGE));
+  const c = DIV_LUT[Math.round((t + 1) / 2 * 255)];
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+const markers = {};
+for (const st of STATIONS) {
+  markers[st.name] = L.circleMarker([st.lat, st.lon], {
+    radius: 10, color: '#222', weight: 1.5, fillOpacity: 0.95,
+    fillColor: markerColor(st),
+  }).addTo(map)
+    .bindTooltip(st.name, {direction: 'top', offset: [0, -8]})
+    .bindPopup(() => popupHtml(st), {maxWidth: 360});
+}
+function refresh() {
+  for (const st of STATIONS) {
+    markers[st.name].setStyle({fillColor: markerColor(st)});
+    if (markers[st.name].isPopupOpen()) markers[st.name].getPopup()
+      .setContent(popupHtml(st));
   }
-  return {all: num / den, perDom};
+  updateReadout(); updateBands();
 }
 
 // --- controls ----------------------------------------------------------------
@@ -327,7 +313,7 @@ function sideControl(name, position) {
       if (f > t) [f, t] = [t, f];
       s.from = f; s.to = t;
       sels[0].value = f; sels[1].value = t;
-      renderDiff();
+      refresh();
     };
     sels.forEach(el => el.addEventListener('change', apply));
     d.querySelectorAll('.presets button').forEach(b =>
@@ -356,7 +342,7 @@ readoutCtl.onAdd = () => {
     '<div id="numbers"></div>' +
     '<div id="chart"></div>' +
     '<div class="muted">annual, km/h, area-weighted over both domains; ' +
-    'shaded bands = selected periods</div>';
+    'shaded bands = selected periods. Click a station for details.</div>';
   return readoutDiv;
 };
 readoutCtl.addTo(map);
@@ -434,6 +420,17 @@ function updateBands() {
         fill="#52514e">${n}</text>`;
   }).join('');
 }
+function combinedMean(s) {
+  let num = 0, den = 0, perDom = {};
+  for (const dom of DOMS) {
+    const ys = ALL_YEARS.filter(y => STATS[dom][y] && y >= s.from && y <= s.to);
+    if (!ys.length) continue;
+    const m = mean(ys.map(y => STATS[dom][y].mean_ms));
+    const cells = STATS[dom][ys[0]].cells;
+    perDom[dom] = m; num += m * cells; den += cells;
+  }
+  return {all: num / den, perDom};
+}
 function updateReadout() {
   const a = combinedMean(sides.A), b = combinedMean(sides.B);
   const dk = (b.all - a.all) * KMH, dp = (b.all / a.all - 1) * 100;
@@ -454,18 +451,18 @@ const legend = L.control({position: 'bottomright'});
 legend.onAdd = () => {
   const d = L.DomUtil.create('div', 'panel legendbox');
   d.innerHTML = `
-    <h4>p99 gust: relative difference, B vs A</h4>
+    <h4>Station change: mean daily max gust, B vs A</h4>
     <img src="@DIV_RAMP_URI@" style="width:100%;height:12px">
     <div style="display:flex;justify-content:space-between">
       <span>−@DRANGE_PCT@%</span>
       <span class="muted">0 = no change</span>
       <span>+@DRANGE_PCT@%</span></div>
     <div class="muted" style="max-width:300px;margin-top:4px">
-      Red = windier in period B than in period A; blue = calmer. Values
-      beyond ±@DRANGE_PCT@% saturate. Multi-year periods = average of annual
-      p99 surfaces. Spatial pattern reflects each period's wind-direction mix
-      over the (climatological) terrain response; interannual signal is ERA5.
-      Map clipped to the Aurora service area + 10 km.</div>
+      Marker colour = relative change in mean daily-max gust between the
+      selected periods (red = windier in B). Click a station for the full
+      comparison: highest gust, p99, strong-gust days, direction rose.
+      Values are ERA5 model estimates at each station's nearest 0.25°
+      grid cell (~25 km) — NOT station observations. Days are NZST.</div>
     <div class="uncert">@UNCERTAINTY@</div>`;
   L.DomEvent.disableClickPropagation(d);
   return d;
@@ -473,7 +470,7 @@ legend.onAdd = () => {
 legend.addTo(map);
 
 drawChart();
-renderDiff();
+refresh();
 </script>
 </body>
 </html>

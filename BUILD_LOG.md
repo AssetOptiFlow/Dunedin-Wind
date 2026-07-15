@@ -69,6 +69,23 @@ multipliers, so it is smooth by construction; the legend says so. Verified
 headless (default + 2024-vs-2025 probe: Central red ≈ +7-8%, Dunedin
 near-white, matching stats).
 
+**Update 2 (2026-07-16, same session).** Jamie judged the relative-difference
+overlay low-value (its smoothness is baked in — see Update 1 caveat) and
+redirected to STATION-BASED comparison. New `16_station_yearly_stats.py`:
+ERA5 hourly series at each of the 7 stations' nearest 0.25° cell, per year —
+annual max gust + NZST date, mean daily max, p99, mean, days ≥ 90/120 km/h,
+and a strong-gust direction rose (fixed per-station threshold = all-years
+p90, so roses are comparable across years). 15 rewritten: raster overlays
+dropped entirely (file 6.1 → 0.2 MB); stations drawn as markers coloured by
+relative change in mean daily-max gust (diverging, fixed ±20% from the worst
+single-year pair); click = full A-vs-B table + overlaid roses. IMPORTANT
+honesty point (also on the map): these are MODEL values at ~25 km grid
+scale, NOT station observations — no CliFlo gust records are used anywhere;
+"highest gust" means highest ERA5 hourly value in the cell. Verified
+headless (2024-vs-2025 probe with Queenstown popup: record 132 km/h on
+2025-10-23, +3 days ≥ 90 km/h — matches the JSON). Per-year gust surfaces
+(outputs_compare/*.tif) are retained on disk for any future raster use.
+
 ## 2026-07-15 — Session 8: combined two-domain map with aligned zones
 
 **Goal.** Single webmap covering both domains with one 5-zone scheme
