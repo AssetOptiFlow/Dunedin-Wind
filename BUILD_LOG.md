@@ -34,6 +34,14 @@ headless still broken — combined map verified statically; screenshot owed.
 **Checkpoints.** None new — alignment reuses the confirmed Jenks scheme;
 per-domain zone products unchanged.
 
+**Addendum (same day, Jamie's requests).** Combined map revised: zone
+polygon outlines removed (fill only); every displayed layer clipped to the
+Aurora service area + 10 km buffer (union of reach polygons; display area
+14,408 km^2, arrows 262); the five zones are now five independent layer
+checkboxes with a shared transparency slider (0-100%, default 55%). Legend
+notes the clip. Per-domain maps unchanged. Dunedin's 1 km^2 of aligned
+Zone 1 fell outside the buffer and is no longer displayed.
+
 **Next.** Jamie reviews webmap_combined. Parked: NZS 3604 design-gust layer,
 station validation, Pages/landing page.
 

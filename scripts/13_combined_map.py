@@ -46,6 +46,20 @@ GUST_CMAP, LIGHTNING_CMAP = "YlOrRd", "Blues"
 ZONE_COLORS = ["#2c7bb6", "#abd9e9", "#ffffbf", "#fdae61", "#d7191c"]
 CONF_COLORS = {3: (26, 152, 80, 140), 2: (254, 196, 79, 150), 1: (215, 48, 39, 150)}
 ARROW_TARGET_SPACING_M = 7500
+# Everything displayed is clipped to the Aurora service area + this buffer.
+CLIP_BUFFER_M = 10_000
+
+
+def service_clip():
+    """Union of all substation reach polygons + generous buffer.
+    Returns (clip in CRS_WORKING, clip in WGS84)."""
+    g = gpd.read_file(C.SHARED_DATA / "substations" /
+                      "aurora_zone_substations.geojson")
+    g = g[g.geometry.geom_type == "Polygon"].to_crs(C.CRS_WORKING)
+    clip_utm = g.union_all().buffer(CLIP_BUFFER_M)
+    clip_wgs = gpd.GeoSeries([clip_utm], crs=C.CRS_WORKING) \
+        .to_crs(C.CRS_WGS84).iloc[0]
+    return clip_utm, clip_wgs
 
 
 def pooled_breaks():
@@ -61,13 +75,15 @@ def pooled_breaks():
     return [float(b) for b in bs]
 
 
-def aligned_zones(bs):
+def aligned_zones(bs, clip_utm):
     frames = []
     for d in DOMAINS:
         gdf, zones_r, transform = core.generalise(
             d["out"] / "gust" / "gust99_500m.tif",
             d["data"] / "dem" / "land_500m.tif", bs)
         gdf["domain"] = d["title"]
+        gdf["geometry"] = gdf.geometry.intersection(clip_utm)
+        gdf = gdf[~gdf.geometry.is_empty]
         frames.append(gdf)
         with rasterio.open(d["out"] / "gust" / "gust99_500m.tif") as src:
             prof = src.profile.copy()
@@ -94,7 +110,10 @@ def aligned_zones(bs):
     return gdf
 
 
-def merged_arrows():
+def merged_arrows(clip_utm):
+    from shapely.geometry import Point
+    from shapely.prepared import prep
+    clip = prep(clip_utm)
     feats = []
     for d in DOMAINS:
         gj = json.loads((d["out"] / "arrows.geojson").read_text())
@@ -105,6 +124,8 @@ def merged_arrows():
         for f in fs:
             lon, lat = f["geometry"]["coordinates"]
             x, y = to_utm.transform(lon, lat)
+            if not clip.contains(Point(x, y)):
+                continue
             key = (round(x / ARROW_TARGET_SPACING_M), round(y / ARROW_TARGET_SPACING_M))
             if key in seen:
                 continue
@@ -148,11 +169,12 @@ def merged_substations():
     return out
 
 
-def overlay(path, cmap, vmin, vmax, categorical=None):
+def overlay(path, cmap, vmin, vmax, categorical=None, clip_wgs=None):
     with rasterio.open(path) as src:
         a = src.read(1)
         b = src.bounds
         nodata = src.nodata
+        transform, shp = src.transform, src.shape
     if nodata is not None:
         a = np.where(a == nodata, np.nan, a)
     if categorical:
@@ -164,6 +186,10 @@ def overlay(path, cmap, vmin, vmax, categorical=None):
         norm = np.clip((a - vmin) / (vmax - vmin), 0, 1)
         rgba = (colormaps[cmap](norm) * 255).astype("uint8")
         rgba[..., 3] = np.where(mask, 0, 200)
+    if clip_wgs is not None:
+        inside = ~geometry_mask([clip_wgs], out_shape=shp, transform=transform,
+                                invert=False, all_touched=True)
+        rgba[..., 3] = np.where(inside, rgba[..., 3], 0)
     buf = io.BytesIO()
     Image.fromarray(rgba).save(buf, format="PNG")
     uri = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
@@ -200,23 +226,30 @@ def main():
           f"({[f'{b*C.MS_TO_KMH:.0f}' for b in bs]} km/h)")
     (OUT / "pooled_breaks.json").write_text(json.dumps(bs))
 
-    zones = aligned_zones(bs)
-    arrows = merged_arrows()
+    clip_utm, clip_wgs = service_clip()
+    print(f"clip: service area + {CLIP_BUFFER_M/1000:.0f} km buffer "
+          f"({clip_utm.area/1e6:.0f} km^2)")
+
+    zones = aligned_zones(bs, clip_utm)
+    arrows = merged_arrows(clip_utm)
     stations = merged_points("stations.geojson")
     subs = merged_substations()
 
     gust_paths = [d["out"] / "gust" / "gust99_500m_wgs84.tif" for d in DOMAINS]
     gvmin, gvmax = shared_range(gust_paths)
-    gust_ovls = [overlay(p, GUST_CMAP, gvmin, gvmax) for p in gust_paths]
+    gust_ovls = [overlay(p, GUST_CMAP, gvmin, gvmax, clip_wgs=clip_wgs)
+                 for p in gust_paths]
     conf_ovls = [overlay(d["out"] / "confidence" / "confidence_500m_wgs84.tif",
-                         None, 0, 0, categorical=CONF_COLORS) for d in DOMAINS]
+                         None, 0, 0, categorical=CONF_COLORS,
+                         clip_wgs=clip_wgs) for d in DOMAINS]
     lt_paths = [d["out"] / "lightning" / "lightning_density_display_wgs84.tif"
                 for d in DOMAINS]
     lt_paths = [p for p in lt_paths if p.exists()]
     lt_ovls, lt_range = [], (0, 0)
     if lt_paths:
         lt_range = shared_range(lt_paths)
-        lt_ovls = [overlay(p, LIGHTNING_CMAP, *lt_range) for p in lt_paths]
+        lt_ovls = [overlay(p, LIGHTNING_CMAP, *lt_range, clip_wgs=clip_wgs)
+                   for p in lt_paths]
 
     def group_js(ovls, opacity):
         items = ", ".join(f"L.imageOverlay('{u}', {json.dumps(b)}, "
@@ -249,6 +282,9 @@ def main():
         "@STATIONS@": json.dumps(stations),
         "@SUBS@": subs.to_json(),
         "@ZONE_COLORS@": json.dumps(ZONE_COLORS),
+        "@ZONE_RANGES@": json.dumps(
+            [f"{bs[z-1]*C.MS_TO_KMH:.0f}-{bs[z]*C.MS_TO_KMH:.0f}"
+             for z in range(1, C.N_ZONES + 1)]),
         "@ZONE_ROWS@": zone_rows,
         "@LIGHTNING_LEGEND@": lightning_legend,
         "@RAMP_URI@": ramp_uri(GUST_CMAP),
@@ -299,14 +335,25 @@ const confidence = @CONF_GROUP@;
 const lightning = @LT_GROUP@;
 
 const zoneColors = @ZONE_COLORS@;
-const zones = L.geoJSON(@ZONES@, {
-  style: f => ({color: '#333', weight: 1.2,
-                fillColor: zoneColors[f.properties.zone - 1], fillOpacity: .45}),
-  onEachFeature: (f, l) => l.bindPopup(
-    `<b>${f.properties.label}</b> (${f.properties.domain})` +
-    `<br>p99 gust ${f.properties.gust_range_kmh} km/h` +
-    ` (${f.properties.gust_range_ms} m/s)<br><i>${f.properties.note}</i>`)
-});
+const zonesData = @ZONES@;
+let zoneOpacity = 0.55;
+const zoneLayers = {};
+for (let z = 1; z <= 5; z++) {
+  zoneLayers[z] = L.geoJSON(zonesData, {
+    filter: f => f.properties.zone === z,
+    style: f => ({stroke: false,
+                  fillColor: zoneColors[f.properties.zone - 1],
+                  fillOpacity: zoneOpacity}),
+    onEachFeature: (f, l) => l.bindPopup(
+      `<b>${f.properties.label}</b> (${f.properties.domain})` +
+      `<br>p99 gust ${f.properties.gust_range_kmh} km/h` +
+      ` (${f.properties.gust_range_ms} m/s)<br><i>${f.properties.note}</i>`)
+  });
+}
+function setZoneOpacity(v) {
+  zoneOpacity = v;
+  for (let z = 1; z <= 5; z++) zoneLayers[z].setStyle({fillOpacity: v});
+}
 
 function arrowIcon(bearing, speed, vmin, vmax) {
   const t = Math.min(1, Math.max(0, (speed - vmin) / (vmax - vmin)));
@@ -347,16 +394,37 @@ const stations = L.geoJSON(@STATIONS@, {
     .bindPopup(`<b>${f.properties.name}</b><br>${f.properties.role}`)
 });
 
-zones.addTo(map); arrows.addTo(map); subs.addTo(map); stations.addTo(map);
-L.control.layers(null, {
+for (let z = 1; z <= 5; z++) zoneLayers[z].addTo(map);
+arrows.addTo(map); subs.addTo(map); stations.addTo(map);
+const zoneRanges = @ZONE_RANGES@;
+const overlays = {
   'Gust speed (continuous, shared scale)': gust,
-  'Aligned exposure zones (1–5)': zones,
+};
+for (let z = 1; z <= 5; z++) {
+  overlays[`Zone ${z} (${zoneRanges[z-1]} km/h)`] = zoneLayers[z];
+}
+Object.assign(overlays, {
   'Direction arrows': arrows,
   'Confidence band': confidence,
   'Lightning strike density': lightning,
   'Zone substation areas (Aurora)': subs,
   'Stations (context)': stations,
-}, {collapsed: false}).addTo(map);
+});
+L.control.layers(null, overlays, {collapsed: false}).addTo(map);
+
+// Zone transparency slider (applies to all five zone layers).
+const opacityCtl = L.control({position: 'topright'});
+opacityCtl.onAdd = () => {
+  const d = L.DomUtil.create('div', 'legend');
+  d.innerHTML = `Zone transparency<br>
+    <input id="zop" type="range" min="0" max="100" value="${zoneOpacity*100}"
+      style="width:140px">`;
+  L.DomEvent.disableClickPropagation(d);
+  d.querySelector('#zop').addEventListener('input',
+    e => setZoneOpacity(e.target.value / 100));
+  return d;
+};
+opacityCtl.addTo(map);
 
 const legend = L.control({position: 'bottomright'});
 legend.onAdd = () => {
@@ -369,6 +437,8 @@ legend.onAdd = () => {
     <h4>Aligned exposure zones (pooled Jenks)</h4>@ZONE_ROWS@
     <div class="row" style="color:#444">one break set for both domains —
       Dunedin sits mid-range next to alpine extremes by construction</div>
+    <div class="row" style="color:#444">map clipped to the Aurora service
+      area + 10 km buffer</div>
     <h4>Direction arrows</h4>
     <div class="row">point downwind; size/colour = local p99 gust</div>
     <h4>Confidence</h4>
