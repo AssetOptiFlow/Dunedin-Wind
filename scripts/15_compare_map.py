@@ -1,17 +1,22 @@
-"""Build the split-screen year-comparison webmap (webmap_compare/index.html).
+"""Build the year-comparison webmap (webmap_compare/index.html).
 
-Reads the per-year surfaces from 14_yearly_gust.py (both domains, every year
-present) and embeds each as a small grayscale "data PNG" (byte = gust scaled
-to one fixed global range, alpha = strictly 0/255 validity). The page decodes
-them client-side, so each half of the swipe screen can average an arbitrary
-user-chosen span of years — no server, single file, works from file://.
+Shows ONE overlay: the per-cell RELATIVE DIFFERENCE in p99 gust between two
+user-chosen periods, (B - A) / A, on a diverging blue-0-red scale (red =
+windier in B). Each period is the mean of its years' annual surfaces from
+14_yearly_gust.py. Spatial structure in the difference reflects how each
+period's directional mix loads the (climatological) WindNinja terrain
+response — interannual signal is ERA5's.
 
-Colour scale is FIXED across all years and both domains (pooled 1..99.5
-percentiles), otherwise side-by-side comparison would lie. Everything is
-clipped to the Aurora service area + 10 km, like the combined map.
+Years are embedded as grayscale "data PNGs" (byte = gust on one fixed
+absolute scale, alpha = strictly 0/255 validity); the browser averages the
+selected spans and computes the difference client-side, so any period works
+offline from one self-contained file. The diverging display range is FIXED
+(worst single-year-pair 99.5th-percentile |relative difference|, rounded up
+to 5%) so colours mean the same thing across selections.
 
-Standalone read-only build: never touches webmap/, webmap_central/ or
-webmap_combined/. Rerun after 14 whenever new years land.
+Everything is clipped to the Aurora service area + 10 km, like the combined
+map. Standalone read-only build: never touches the other webmaps. Rerun
+after 14 whenever new years land.
 """
 import base64
 import io
@@ -34,7 +39,7 @@ REPO = C.REPO
 IN = REPO / "outputs_compare"
 WEB = REPO / "webmap_compare"
 DOMAIN_KEYS = ["dunedin", "central"]
-GUST_CMAP = "YlOrRd"
+DIV_CMAP = "RdBu_r"   # red = windier in B, blue = calmer, white ~ no change
 CLIP_BUFFER_M = 10_000
 
 
@@ -74,14 +79,27 @@ def ramp_uri(cmap):
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+def diff_display_range(per_dom_arrays):
+    """Fixed diverging range: max over all single-year pairs of the 99.5th
+    percentile |(y_j - y_i) / y_i|, cell-subsampled, rounded UP to 5%."""
+    worst = 0.0
+    for arrs in per_dom_arrays.values():
+        sub = [a[::7] for a in arrs]  # every 7th valid cell is plenty
+        for i in range(len(sub)):
+            for j in range(len(sub)):
+                if i == j:
+                    continue
+                d = np.percentile(np.abs((sub[j] - sub[i]) / sub[i]), 99.5)
+                worst = max(worst, float(d))
+    return np.ceil(worst * 20) / 20
+
+
 def main():
     stats = json.loads((IN / "yearly_stats.json").read_text())
     clip_wgs = service_clip_wgs()
 
-    # Pass 1: pooled fixed colour range over every year x domain (clip area).
-    surfaces = {}   # (dom, year) -> (array, bounds)
-    valids = {}
-    pool = []
+    # Pass 1: load every year x domain; pooled fixed ABSOLUTE byte scale.
+    surfaces, valids, pool = {}, {}, []
     for dom in DOMAIN_KEYS:
         years = sorted(stats["domains"][dom]["years"])
         for i, y in enumerate(years):
@@ -98,9 +116,13 @@ def main():
     pool = np.concatenate(pool)
     vmin = float(np.percentile(pool, 1))
     vmax = float(np.percentile(pool, 99.5))
-    print(f"fixed scale {vmin:.1f}-{vmax:.1f} m/s "
-          f"({vmin*C.MS_TO_KMH:.0f}-{vmax*C.MS_TO_KMH:.0f} km/h), "
-          f"{len(surfaces)} year-surfaces")
+
+    per_dom = {dom: [surfaces[dom, y][0][valids[dom]]
+                     for y in sorted(stats["domains"][dom]["years"])]
+               for dom in DOMAIN_KEYS}
+    drange = diff_display_range(per_dom)
+    print(f"absolute byte scale {vmin:.1f}-{vmax:.1f} m/s, "
+          f"{len(surfaces)} year-surfaces; diff display range ±{drange*100:.0f}%")
 
     imgs, bounds_js, years_js = {}, {}, {}
     for dom in DOMAIN_KEYS:
@@ -112,7 +134,7 @@ def main():
             imgs[dom][y] = data_png(a, valids[dom], vmin, vmax)
         bounds_js[dom] = [[b.bottom, b.left], [b.top, b.right]]
 
-    lut = (colormaps[GUST_CMAP](np.linspace(0, 1, 256))[:, :3] * 255) \
+    div_lut = (colormaps[DIV_CMAP](np.linspace(0, 1, 256))[:, :3] * 255) \
         .astype(int).tolist()
 
     side_stats = {dom: {str(y): {"mean_ms": v["clip_mean_ms"],
@@ -129,10 +151,12 @@ def main():
         "@BOUNDS@": json.dumps(bounds_js),
         "@YEARS@": json.dumps(years_js),
         "@STATS@": json.dumps(side_stats),
-        "@LUT@": json.dumps(lut),
-        "@VMIN_KMH@": f"{vmin * C.MS_TO_KMH:.0f}",
-        "@VMAX_KMH@": f"{vmax * C.MS_TO_KMH:.0f}",
-        "@RAMP_URI@": ramp_uri(GUST_CMAP),
+        "@DIV_LUT@": json.dumps(div_lut),
+        "@VMIN_MS@": f"{vmin:.4f}",
+        "@VMAX_MS@": f"{vmax:.4f}",
+        "@DRANGE@": f"{drange:.2f}",
+        "@DRANGE_PCT@": f"{drange*100:.0f}",
+        "@DIV_RAMP_URI@": ramp_uri(DIV_CMAP),
         "@UNCERTAINTY@": C.UNCERTAINTY_STATEMENT,
     }.items():
         html = html.replace(k, v)
@@ -169,13 +193,6 @@ TEMPLATE = """<!DOCTYPE html>
   .readout td { padding: 1px 8px 1px 0; }
   .keydot { display: inline-block; width: 9px; height: 9px; border-radius: 2px;
             margin-right: 4px; vertical-align: baseline; }
-  #divider { position: absolute; top: 0; bottom: 0; width: 4px; margin-left: -2px;
-    background: #fff; box-shadow: 0 0 4px rgba(0,0,0,.5); cursor: ew-resize;
-    z-index: 900; }
-  #divider .grip { position: absolute; top: 50%; left: 50%; width: 34px;
-    height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: #fff;
-    box-shadow: 0 1px 5px rgba(0,0,0,.5); display: flex; align-items: center;
-    justify-content: center; color: #52514e; font-weight: 700; }
   .uncert { margin-top: 6px; padding-top: 5px; border-top: 1px solid #e1e0d9;
             font-style: italic; color: #52514e; max-width: 300px; }
   #chart { margin-top: 6px; }
@@ -192,7 +209,8 @@ TEMPLATE = """<!DOCTYPE html>
 <script>
 'use strict';
 const IMGS = @IMGS@, BOUNDS = @BOUNDS@, YEARS = @YEARS@, STATS = @STATS@,
-      LUT = @LUT@, KMH = 3.6;
+      DIV_LUT = @DIV_LUT@, KMH = 3.6,
+      VMIN = @VMIN_MS@, VMAX = @VMAX_MS@, DRANGE = @DRANGE@;
 const DOMS = Object.keys(YEARS);
 const ALL_YEARS = [...new Set(DOMS.flatMap(d => YEARS[d]))].sort((a,b) => a-b);
 const Y0 = ALL_YEARS[0], Y1 = ALL_YEARS[ALL_YEARS.length - 1];
@@ -203,43 +221,8 @@ map.fitBounds([[-46.1, 168.18], [-44.13, 170.8]]);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 17, attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
-const paneA = map.createPane('sideA'), paneB = map.createPane('sideB');
-paneA.style.zIndex = 450; paneB.style.zIndex = 450;
 
-// --- swipe divider (clip the two panes in layer coordinates) ---------------
-let split = 0.5;
-const divider = document.createElement('div');
-divider.id = 'divider';
-divider.innerHTML = '<div class="grip">&#x2194;</div>';
-map.getContainer().appendChild(divider);
-function updateClip() {
-  const size = map.getSize(), x = size.x * split;
-  divider.style.left = x + 'px';
-  const nw = map.containerPointToLayerPoint([0, 0]);
-  const se = map.containerPointToLayerPoint(size);
-  const cx = map.containerPointToLayerPoint([x, 0]).x;
-  paneA.style.clipPath = `polygon(${nw.x}px ${nw.y}px, ${cx}px ${nw.y}px,
-    ${cx}px ${se.y}px, ${nw.x}px ${se.y}px)`;
-  paneB.style.clipPath = `polygon(${cx}px ${nw.y}px, ${se.x}px ${nw.y}px,
-    ${se.x}px ${se.y}px, ${cx}px ${se.y}px)`;
-}
-map.on('move zoom zoomend resize viewreset', updateClip);
-divider.addEventListener('pointerdown', e => {
-  e.preventDefault(); divider.setPointerCapture(e.pointerId);
-  map.dragging.disable();
-  const onMove = ev => {
-    const r = map.getContainer().getBoundingClientRect();
-    split = Math.min(.97, Math.max(.03, (ev.clientX - r.left) / r.width));
-    updateClip();
-  };
-  const onUp = () => { map.dragging.enable();
-    divider.removeEventListener('pointermove', onMove);
-    divider.removeEventListener('pointerup', onUp); };
-  divider.addEventListener('pointermove', onMove);
-  divider.addEventListener('pointerup', onUp);
-});
-
-// --- data decoding & averaging ---------------------------------------------
+// --- data decoding & period averaging ---------------------------------------
 const cache = new Map();
 async function decode(dom, year) {
   const key = dom + year;
@@ -255,7 +238,7 @@ async function decode(dom, year) {
   cache.set(key, d);
   return d;
 }
-async function composite(dom, years) {
+async function periodMean(dom, years) {  // mean byte per cell + validity
   const first = await decode(dom, years[0]);
   const n = first.width * first.height;
   const sum = new Float64Array(n);
@@ -263,40 +246,45 @@ async function composite(dom, years) {
     const d = (await decode(dom, y)).data;
     for (let i = 0; i < n; i++) sum[i] += d[i * 4];
   }
-  const out = new ImageData(first.width, first.height);
-  const a = first.data, o = out.data;
-  for (let i = 0; i < n; i++) {
-    if (a[i * 4 + 3] === 0) continue;
-    const c = LUT[Math.round(sum[i] / years.length)];
-    o[i * 4] = c[0]; o[i * 4 + 1] = c[1]; o[i * 4 + 2] = c[2];
-    o[i * 4 + 3] = 200;
-  }
-  const cv = document.createElement('canvas');
-  cv.width = first.width; cv.height = first.height;
-  cv.getContext('2d').putImageData(out, 0, 0);
-  return cv.toDataURL();
+  for (let i = 0; i < n; i++) sum[i] /= years.length;
+  return {w: first.width, h: first.height, avg: sum, alpha: first.data};
 }
+const toMs = byte => VMIN + byte / 255 * (VMAX - VMIN);
 
-// --- sides -------------------------------------------------------------------
+// --- periods ------------------------------------------------------------------
 const sides = {
-  A: {pane: 'sideA', from: Y0, to: Math.min(2020, Y1), overlays: {}},
-  B: {pane: 'sideB', from: Y1, to: Y1, overlays: {}},
+  A: {from: Y0, to: Math.min(2020, Y1)},
+  B: {from: Y1, to: Y1},
 };
 function sideYears(s, dom) {
   return YEARS[dom].filter(y => y >= s.from && y <= s.to);
 }
+
+// --- difference overlay ---------------------------------------------------------
+const overlays = {};
 let renderSeq = 0;
-async function renderSide(name) {
-  const s = sides[name], seq = ++renderSeq + 0;
-  s.seq = seq;
+async function renderDiff() {
+  const seq = ++renderSeq;
   for (const dom of DOMS) {
-    const ys = sideYears(s, dom);
-    if (!ys.length) continue;
-    const url = await composite(dom, ys);
-    if (s.seq !== seq) return;             // superseded by a newer selection
-    if (s.overlays[dom]) s.overlays[dom].setUrl(url);
-    else s.overlays[dom] = L.imageOverlay(url, BOUNDS[dom],
-      {pane: s.pane, opacity: 1}).addTo(map);
+    const ya = sideYears(sides.A, dom), yb = sideYears(sides.B, dom);
+    if (!ya.length || !yb.length) continue;
+    const [a, b] = await Promise.all([periodMean(dom, ya), periodMean(dom, yb)]);
+    if (seq !== renderSeq) return;            // superseded by a newer selection
+    const n = a.w * a.h, out = new ImageData(a.w, a.h), o = out.data;
+    for (let i = 0; i < n; i++) {
+      if (a.alpha[i * 4 + 3] === 0) continue;
+      const rel = (toMs(b.avg[i]) - toMs(a.avg[i])) / toMs(a.avg[i]);
+      const t = Math.max(-1, Math.min(1, rel / DRANGE));
+      const c = DIV_LUT[Math.round((t + 1) / 2 * 255)];
+      o[i * 4] = c[0]; o[i * 4 + 1] = c[1]; o[i * 4 + 2] = c[2];
+      o[i * 4 + 3] = 200;
+    }
+    const cv = document.createElement('canvas');
+    cv.width = a.w; cv.height = a.h;
+    cv.getContext('2d').putImageData(out, 0, 0);
+    const url = cv.toDataURL();
+    if (overlays[dom]) overlays[dom].setUrl(url);
+    else overlays[dom] = L.imageOverlay(url, BOUNDS[dom], {opacity: 1}).addTo(map);
   }
   updateReadout(); updateBands();
 }
@@ -324,7 +312,7 @@ function sideControl(name, position) {
     const d = L.DomUtil.create('div', 'panel side' + name);
     const opts = f => ALL_YEARS.map(y =>
       `<option value="${y}" ${y === f ? 'selected' : ''}>${y}</option>`).join('');
-    d.innerHTML = `<h4>Side ${name} ${name === 'A' ? '(left)' : '(right)'}</h4>
+    d.innerHTML = `<h4>Period ${name}${name === 'A' ? ' (baseline)' : ''}</h4>
       <label>from <select data-k="from">${opts(s.from)}</select></label>
       <label>to <select data-k="to">${opts(s.to)}</select></label>
       <div class="presets">
@@ -339,7 +327,7 @@ function sideControl(name, position) {
       if (f > t) [f, t] = [t, f];
       s.from = f; s.to = t;
       sels[0].value = f; sels[1].value = t;
-      renderSide(name);
+      renderDiff();
     };
     sels.forEach(el => el.addEventListener('change', apply));
     d.querySelectorAll('.presets button').forEach(b =>
@@ -466,17 +454,18 @@ const legend = L.control({position: 'bottomright'});
 legend.onAdd = () => {
   const d = L.DomUtil.create('div', 'panel legendbox');
   d.innerHTML = `
-    <h4>p99 gust estimate (km/h)</h4>
-    <img src="@RAMP_URI@" style="width:100%;height:12px">
+    <h4>p99 gust: relative difference, B vs A</h4>
+    <img src="@DIV_RAMP_URI@" style="width:100%;height:12px">
     <div style="display:flex;justify-content:space-between">
-      <span>@VMIN_KMH@</span>
-      <span class="muted">fixed scale, all years</span>
-      <span>@VMAX_KMH@</span></div>
+      <span>−@DRANGE_PCT@%</span>
+      <span class="muted">0 = no change</span>
+      <span>+@DRANGE_PCT@%</span></div>
     <div class="muted" style="max-width:300px;margin-top:4px">
-      Each side shows the p99 hourly gust for its selected period (multi-year
-      periods = average of annual surfaces). Drag the divider to compare.
-      Interannual differences come from ERA5; the WindNinja terrain response
-      is climatological. Map clipped to the Aurora service area + 10 km.</div>
+      Red = windier in period B than in period A; blue = calmer. Values
+      beyond ±@DRANGE_PCT@% saturate. Multi-year periods = average of annual
+      p99 surfaces. Spatial pattern reflects each period's wind-direction mix
+      over the (climatological) terrain response; interannual signal is ERA5.
+      Map clipped to the Aurora service area + 10 km.</div>
     <div class="uncert">@UNCERTAINTY@</div>`;
   L.DomEvent.disableClickPropagation(d);
   return d;
@@ -484,9 +473,7 @@ legend.onAdd = () => {
 legend.addTo(map);
 
 drawChart();
-updateClip();
-renderSide('A');
-renderSide('B');
+renderDiff();
 </script>
 </body>
 </html>

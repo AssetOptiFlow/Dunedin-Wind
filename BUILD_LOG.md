@@ -57,6 +57,18 @@ embedded). Decide: commit + push to Pages; whether to roll the headline
 climatology to the 1996–2025 normal (all data now on disk, would change the
 existing maps); rerun `14` then `15` each year to append the newest year.
 
+**Update (2026-07-16, same session).** Published to Pages at Jamie's request
+(/webmap_compare/, commit 05879f5). Then, per Jamie's follow-up ask, the map
+was REDESIGNED: split-screen absolute p99 layers replaced by a single
+per-cell relative-difference overlay, (B−A)/A, diverging RdBu (red = windier
+in B), fixed display range ±30% (worst single-year-pair 99.5th-pct |rel
+diff|, rounded up to 5%). Period selectors, readout, and annual chart kept;
+swipe divider removed. Caveat: the spatial pattern of a relative-difference
+map comes ONLY from the periods' differing sector mixes over the fixed
+multipliers, so it is smooth by construction; the legend says so. Verified
+headless (default + 2024-vs-2025 probe: Central red ≈ +7-8%, Dunedin
+near-white, matching stats).
+
 ## 2026-07-15 — Session 8: combined two-domain map with aligned zones
 
 **Goal.** Single webmap covering both domains with one 5-zone scheme
