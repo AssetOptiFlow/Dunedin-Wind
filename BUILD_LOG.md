@@ -1,5 +1,42 @@
 # BUILD_LOG
 
+## 2026-07-15 — Session 8: combined two-domain map with aligned zones
+
+**Goal.** Single webmap covering both domains with one 5-zone scheme
+(Jamie's ask).
+
+**Decisions.**
+- Zone generalisation core factored into scripts/_zones_core.py (file-driven,
+  no config-domain dependence) — used by both 08 and the new 13. Dunedin
+  regression under refactored 08: identical breaks and zone areas.
+- Alignment method: Jenks on the POOLED smoothed gust fields of both domains
+  (deterministic 40k evenly-spaced subsample of ~315k cells), one break set
+  applied to both. Pooled breaks 14.1/20.0/22.0/23.4/24.9/30.4 m/s
+  (51/72/79/84/90/110 km/h) — nearly identical to the central-domain breaks,
+  which dominate the pooled sample ~27:1 by area.
+- Combined webmap (webmap_combined/index.html, 2.3 MB): per-layer
+  L.layerGroups pair the two domains' rasters under single toggles; gust and
+  lightning use SHARED colour scales; zones/arrows/substations/stations are
+  merged vector layers. Arrows thinned to a uniform 7.5 km. Substation
+  dominant-zone and %Zones-4-5 recomputed against the aligned rasters.
+
+**Results / honest consequence of alignment.** Dunedin occupies aligned
+Zone 3 almost wholly (1,487 of ~1,740 km^2; fringes of Z2/Z4, zero Z5,
+1 km^2 Z1) — mid-range by construction next to alpine extremes. The
+domain-local Dunedin map retains the finer internal contrast; the combined
+map answers "where does the whole network rank"; both are published. Legend
+states this explicitly.
+
+**Residuals.** Combined map not added to full_refresh (needs both domains
+current; regenerate manually via script 13 after any domain refresh). Edge
+headless still broken — combined map verified statically; screenshot owed.
+
+**Checkpoints.** None new — alignment reuses the confirmed Jenks scheme;
+per-domain zone products unchanged.
+
+**Next.** Jamie reviews webmap_combined. Parked: NZS 3604 design-gust layer,
+station validation, Pages/landing page.
+
 ## 2026-07-15 — Session 7: Central Otago/Queenstown domain complete
 
 **Goal.** Deliver the second domain end-to-end (Jamie approved 2026-07-12).
