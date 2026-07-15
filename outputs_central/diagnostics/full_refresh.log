@@ -386,3 +386,201 @@ wrote C:\Users\Jamie\sandbox-fable\Dunedin-Wind\outputs_central\era5_climatology
 
 2026-07-15 07:22:55      ok (0.1 min)
 2026-07-15 07:23:25  --- windninja: 05_run_windninja.py
+8-sector run matrix (dir deg -> input speed m/s):
+   N   0 deg  6.2 m/s
+  NE  45 deg  7.9 m/s
+   E  90 deg  6.5 m/s
+  SE 135 deg  4.5 m/s
+   S 180 deg  4.9 m/s
+  SW 225 deg  8.7 m/s
+   W 270 deg  8.7 m/s
+  NW 315 deg  7.4 m/s
+  N: dir 0 deg @ 6.2 m/s ...
+  N: mult 0.20..2.21 (mean 0.96, 259 cells clipped)
+  NE: dir 45 deg @ 7.9 m/s ...
+  NE: mult 0.20..2.07 (mean 0.96, 286 cells clipped)
+  E: dir 90 deg @ 6.5 m/s ...
+  E: mult 0.20..2.45 (mean 0.95, 459 cells clipped)
+  SE: dir 135 deg @ 4.5 m/s ...
+  SE: mult 0.20..2.15 (mean 0.96, 170 cells clipped)
+  S: dir 180 deg @ 4.9 m/s ...
+  S: mult 0.20..2.18 (mean 0.96, 249 cells clipped)
+  SW: dir 225 deg @ 8.7 m/s ...
+  SW: mult 0.20..2.08 (mean 0.96, 288 cells clipped)
+  W: dir 270 deg @ 8.7 m/s ...
+  W: mult 0.20..2.47 (mean 0.95, 480 cells clipped)
+  NW: dir 315 deg @ 7.4 m/s ...
+  NW: mult 0.20..2.19 (mean 0.96, 192 cells clipped)
+done
+
+--- stderr ---
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\05_run_windninja.py:106: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  arr = src.read(1).astype("float32")
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\05_run_windninja.py:106: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  arr = src.read(1).astype("float32")
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\05_run_windninja.py:106: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  arr = src.read(1).astype("float32")
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\05_run_windninja.py:106: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  arr = src.read(1).astype("float32")
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\05_run_windninja.py:106: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  arr = src.read(1).astype("float32")
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\05_run_windninja.py:106: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  arr = src.read(1).astype("float32")
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\05_run_windninja.py:106: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  arr = src.read(1).astype("float32")
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\05_run_windninja.py:106: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  arr = src.read(1).astype("float32")
+
+2026-07-15 07:27:36      ok (4.2 min)
+2026-07-15 07:28:06  --- gust surface: 06_gust_surface.py
+gust99 weighted: 7.4..43.1 m/s (mean 22.6)
+gust99 worst-case: 8.5..55.8 m/s
+- Weighted p99 gust surface range: 7.4-43.1 m/s (mean 22.6).
+- Southern NZ design gust (V_500) is ~45 m/s: surface max OK (below design).
+- Max/min spatial ratio 5.81 vs credible AS/NZS terrain+lee multiplier spread ~1.80: wide - inspect multiplier clipping.
+
+This check never classifies zones; see README uncertainty statement.
+done
+
+--- stderr ---
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\06_gust_surface.py:40: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  mults.append(src.read(1))
+
+2026-07-15 07:28:07      ok (0.0 min)
+2026-07-15 07:28:37  --- confidence: 07_confidence_layer.py
+{
+  "thresholds_km": {
+    "high": 7.5,
+    "medium": 15.0
+  },
+  "tri_terciles": [
+    5.95415849494934,
+    12.621744766235352
+  ],
+  "cells": {
+    "high": 1720,
+    "medium": 7304,
+    "low": 107085
+  },
+  "no_station_cells": 104867,
+  "max_station_distance_km": 109.5701409667908
+}
+done
+
+--- stderr ---
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\07_confidence_layer.py:47: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  tri = src.read(1)
+
+2026-07-15 07:28:37      ok (0.0 min)
+2026-07-15 07:29:07  --- zones: 08_zones.py --classify jenks
+  breaks on smoothed field (jenks): ['14.1', '19.9', '21.9', '23.3', '24.8', '30.4'] m/s
+  Zone 1: 14.1-19.9 m/s (51-72 km/h), 1886 km^2
+  Zone 2: 19.9-21.9 m/s (72-79 km/h), 6206 km^2
+  Zone 3: 21.9-23.3 m/s (79-84 km/h), 10919 km^2
+  Zone 4: 23.3-24.8 m/s (84-89 km/h), 7315 km^2
+  Zone 5: 24.8-30.4 m/s (89-110 km/h), 2568 km^2
+wrote C:\Users\Jamie\sandbox-fable\Dunedin-Wind\outputs_central\zones.geojson (scheme=jenks, generalised)
+
+--- stderr ---
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\08_zones.py:206: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  gust = src.read(1)
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\08_zones.py:93: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  gust = src.read(1).astype("float64")
+
+2026-07-15 07:30:09      ok (1.0 min)
+2026-07-15 07:30:39  --- arrows: 09_arrows.py
+513 arrows at 7500 m spacing -> C:\Users\Jamie\sandbox-fable\Dunedin-Wind\outputs_central\arrows.geojson
+
+--- stderr ---
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\09_arrows.py:36: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  mults.append(src.read(1))
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\09_arrows.py:39: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  gust = src.read(1)
+
+2026-07-15 07:30:40      ok (0.0 min)
+2026-07-15 07:31:10  --- lightning: 11_lightning_density.py
+{
+  "source": "MfE layer 52851 'Lightning strike density, 2000-14' (NZLDN-derived)",
+  "source_url": "https://data.mfe.govt.nz/layer/52851-lightning-strike-density-200014/",
+  "licence": "NZLDN via MfE, CC BY 3.0 NZ",
+  "period": "2000-14",
+  "native_resolution_m": 5000,
+  "display_smoothing_sigma_m": 2500,
+  "units": "ground strikes / km^2 / yr",
+  "bbox_min": 0.0,
+  "bbox_max": 1.2000000476837158,
+  "bbox_mean": 0.1252945512533188,
+  "n_native_cells": 1375,
+  "note": "Underlying data 5 km native (display smoothed). Coastal Otago strike counts are low: roughly 10-30 strikes per 5 km cell over 2000-14, so finer resolution is not statistically supportable."
+}
+done
+
+--- stderr ---
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\11_lightning_density.py:91: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  data = src.read(1, window=win, boundless=True,
+
+2026-07-15 07:31:10      ok (0.0 min)
+2026-07-15 07:31:40  --- substations: 12_substation_summary.py
+20 substations summarised (of 37 polygons):
+                  name  gust99_mean_kmh  gust99_max_kmh  absolute_max_kmh  dominant_zone  pct_zone_4_5  pct_conf_low  coverage_pct
+       Queenstown (QT)               80             133               158              2            25            93           100
+        Camp Hill (CH)               81             129               150              3            25            74           100
+           Wanaka (WK)               80             127               145              3            16            57           100
+     Coronet Peak (CP)               92             126               140              5            72             4           100
+      Remarkables (RM)               81             118               137              4            47            60           100
+         Frankton (FK)               77             118               137              2             8            16           100
+  Lindis Crossing (LC)               81             123               136              3            17            88           100
+        Arrowtown (AT)               77             118               135              2            10            35           100
+         Cromwell (CM)               81             117               133              2            26            12           100
+        Dalefield (DF)               79             118               129              2            23             5           100
+         Cardrona (CA)               78             110               124              2            26            93           100
+         Fernhill (FH)               76             105               119              2            13            53           100
+        Commonage (CG)               74             107               118              2             3             3           100
+      Queensberry (QB)               80             108               118              3            17            44           100
+Clyde Earnscleugh (CE)               82             104               116              3            21             6           100
+          Ettrick (EK)               82             104               112              3            28           100           100
+        Alexandra (AX)               82             100               111              3            24            17           100
+           Omakau (OM)               83             101               111              3            19            89           100
+         Roxburgh (RB)               80              95               105              2            21           100           100
+      Lauder Flat (LF)               81              90                96              3             3           100           100
+
+--- stderr ---
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\12_substation_summary.py:42: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  gust = s.read(1)
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\12_substation_summary.py:49: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  worst = s.read(1)
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\12_substation_summary.py:53: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  zones = s.read(1)
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\12_substation_summary.py:55: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  conf = s.read(1)
+
+2026-07-15 07:31:41      ok (0.0 min)
+2026-07-15 07:32:11  --- webmap: 10_build_webmap.py
+wrote C:\Users\Jamie\sandbox-fable\Dunedin-Wind\webmap_central\index.html (2.2 MB)
+
+--- stderr ---
+C:\Users\Jamie\sandbox-fable\Dunedin-Wind\scripts\10_build_webmap.py:48: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  a = src.read(1)
+
+2026-07-15 07:32:12      ok (0.0 min)
+2026-07-15 07:32:12  === full refresh complete — review before committing ===

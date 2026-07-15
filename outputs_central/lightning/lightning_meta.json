@@ -1,0 +1,14 @@
+{
+  "source": "MfE layer 52851 'Lightning strike density, 2000-14' (NZLDN-derived)",
+  "source_url": "https://data.mfe.govt.nz/layer/52851-lightning-strike-density-200014/",
+  "licence": "NZLDN via MfE, CC BY 3.0 NZ",
+  "period": "2000-14",
+  "native_resolution_m": 5000,
+  "display_smoothing_sigma_m": 2500,
+  "units": "ground strikes / km^2 / yr",
+  "bbox_min": 0.0,
+  "bbox_max": 1.2000000476837158,
+  "bbox_mean": 0.1252945512533188,
+  "n_native_cells": 1375,
+  "note": "Underlying data 5 km native (display smoothed). Coastal Otago strike counts are low: roughly 10-30 strikes per 5 km cell over 2000-14, so finer resolution is not statistically supportable."
+}

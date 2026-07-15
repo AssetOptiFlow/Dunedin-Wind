@@ -1,5 +1,56 @@
 # BUILD_LOG
 
+## 2026-07-15 — Session 7: Central Otago/Queenstown domain complete
+
+**Goal.** Deliver the second domain end-to-end (Jamie approved 2026-07-12).
+
+**Decisions.**
+- Domain per config: bbox 168.18/−45.89 → 169.96/−44.13 (Aurora central
+  cluster + 10 km), 300 m solver mesh, 7.5 km arrows, stations Queenstown
+  Aero / Wanaka Airport / Alexandra / Cromwell. Jenks re-confirmed by Jamie
+  on the central distribution (Checkpoint recap 2026-07-15); breaks
+  14.1/19.9/21.9/23.3/24.8/30.4 m/s (51–110 km/h) on the smoothed field.
+- ERA5 pull: 90 per-variable-year requests, ~36 h wall (queue-dominated,
+  one bare-launcher outage recovered — Session 6). 16,831,488 samples.
+
+**Provenance.** ERA5 hourly 1991–2020 for the central bbox (66 gridpoints),
+retrieved 2026-07-12→14; GLO-30 tiles S45/S46 × E168/E169/E170 (2026-07-12);
+shared MfE lightning raster and Aurora KML as before.
+
+**Results.**
+- Climatology: p99 gust 23.2 m/s but p99 mean speed only 7.6 m/s (gust
+  factor ~3 — föhn/nor'wester regime over sheltered basins; Dunedin: 22.3
+  and 13.5). Distribution broad (7.4–43.1 m/s), unlike Dunedin's spike.
+- WindNinja: 8 sectors in ~8 min at 300 m mesh. Multipliers 0.20–2.47;
+  the 0.2 clip floor engaged on 170–480 cells/sector (deep valleys) vs ~12
+  in Dunedin — solver visibly stretched by alpine relief.
+- Weighted gust surface 7.4–43.1 m/s (max just under the ~45 m/s design
+  gust); WORST-CASE surface peaks at 55.8 m/s on remote crests — above
+  design level. Flagged: crest values are the least trustworthy cells in
+  the product (mass-conserving solver limits + no nearby stations); the
+  confidence layer marks them low.
+- Substations (20): top absolute max Queenstown 158 km/h (93% of area
+  low-confidence — polygon spans the Remarkables), Camp Hill 150, Wanaka
+  145, Coronet Peak 140 (dominant Zone 5, 72% in Zones 4–5, only 4%
+  low-confidence — the most credible high-exposure site). Basin-floor
+  substations (Frankton, Arrowtown, Cromwell...) mid-pack.
+- Low-confidence share is large across the domain, as predicted — 4
+  stations for 27,400 km² plus alpine TRI. This is the product being
+  honest, not a defect.
+
+**Residuals & caveats.** All Dunedin residuals apply, amplified: ERA5
+coarseness, solver direction-reversal symmetry, no validation. Lakes
+(Wakatipu/Wanaka) are zoned as flat land (GLO-30 gives lake-surface
+elevations). Edge headless still broken machine-wide — central webmap
+verified statically only; screenshot owed after a reboot.
+
+**Checkpoints.** Central zone scheme: Jenks, confirmed by Jamie 2026-07-15.
+All other Dunedin checkpoint decisions carried per his scale-up approval.
+
+**Next.** Candidates: NZS 3604-style design-gust layer (both domains now
+have 30 annual maxima); combined two-domain landing page; validation
+against station gust records (needs CliFlo or MetService data).
+
 ## 2026-07-15 — Session 6: root cause of the climatology crashes (CORRECTION)
 
 **Goal.** Unblock the central chain, which failed three times at the

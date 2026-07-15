@@ -1,0 +1,65 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          168.739,
+          -45.021
+        ]
+      },
+      "properties": {
+        "name": "Queenstown Aerodrome AWS",
+        "source": "Public NIWA/CliFlo station metadata (locations only; no gust records used). Coordinates approximate to ~100 m.",
+        "role": "confidence distance anchor - NOT a validation point"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          169.246,
+          -44.722
+        ]
+      },
+      "properties": {
+        "name": "Wanaka Airport AWS",
+        "source": "Public NIWA/CliFlo station metadata (locations only; no gust records used). Coordinates approximate to ~100 m.",
+        "role": "confidence distance anchor - NOT a validation point"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          169.393,
+          -45.249
+        ]
+      },
+      "properties": {
+        "name": "Alexandra EWS",
+        "source": "Public NIWA/CliFlo station metadata (locations only; no gust records used). Coordinates approximate to ~100 m.",
+        "role": "confidence distance anchor - NOT a validation point"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          169.203,
+          -45.038
+        ]
+      },
+      "properties": {
+        "name": "Cromwell EWS",
+        "source": "Public NIWA/CliFlo station metadata (locations only; no gust records used). Coordinates approximate to ~100 m.",
+        "role": "confidence distance anchor - NOT a validation point"
+      }
+    }
+  ]
+}
